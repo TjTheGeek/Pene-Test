@@ -3,7 +3,7 @@ import portScanner
 
 def Portscanner():
     targets = input('[+] Enter Target/s To Scan(split multiple targets with ,): ')
-    ports = input('[+] Enter Port/s To Scan(multiple ports with - for range i.e 79-100): ')
+    ports = input('[+] Enter Port/s To Scan(multiple ports with - for range or , for specific ports): ')
     time = int(input('[+] Enter timeout time in seconds '))
     value = int(0)
     portsArray = []
@@ -34,11 +34,14 @@ def Portscanner():
         else:
             portScanner.scan1(targets.strip(' '), portsArray, time)
 
+
 if __name__ == '__main__':
+
     print("[1] PortScanner")
     option = str(input("Pick a program: "))
-    Portscanner()
     if option == "1":
         Portscanner()
+    else:
+        pass
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/

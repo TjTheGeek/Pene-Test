@@ -2,34 +2,42 @@ import socket
 from IPy import IP
 
 
-def scan1(target, ports,time=500):
-    converted_ip = check_ip(target)
-    print('\n' + '[-_0 Scanning Target] ' + str(target))
-    print(ports)
-    for n in ports:
-        scan_port(converted_ip, n, time)
+def scan1(target, ports, time=500):
+    try:
+        converted_ip = check_ip(target)
+    except:
+        pass
+    else:
+        print('\n' + '[-_0 Scanning Target] ' + str(target)+"1")
+        print(ports)
+        for n in ports:
+            scan_port(converted_ip, n, time)
 
 
 def scan(target, rangeLB=79, rangeUP=84, time=2):
-    converted_ip = check_ip(target)
-    print('\n' + '[-_0 Scanning Target] ' + str(target))
-    for port in range(rangeLB, rangeUP):
-        scan_port(converted_ip, port, time)
+    try:
+        converted_ip = check_ip(target)
+        print('\n' + '[-_0 Scanning Target] ' + str(target)+"2")
+        for port in range(rangeLB, rangeUP):
+            scan_port(converted_ip, port, time)
+    except:
+        pass
 
 
+# check if the domain or ipaddress is formatted correctly
 def check_ip(ip):
     try:
         IP(ip)
         return ip
     except ValueError:
-        return socket.gethostbyname(ip)
+        return "Domain or Ip incorrect: " + str(ip)
 
 
 def get_banner(s):
     return s.recv(1024)
 
 
-def scan_port(ipaddress, port,timeout):
+def scan_port(ipaddress, port, timeout):
     try:
         sock = socket.socket()
         sock.settimeout(timeout)
@@ -49,7 +57,7 @@ if __name__ == "__main__":
     if ',' in targets:
 
         for ip_add in targets.split(','):
-            print (ip_add)
+            print(ip_add)
             scan(ip_add.strip(' '))
 
     else:
