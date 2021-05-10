@@ -8,7 +8,7 @@ def scan1(target, ports, time=500):
     except:
         pass
     else:
-        print('\n' + '[-_0 Scanning Target] ' + str(target)+"1")
+        print('\n' + '[-_0 Scanning Target] ' + str(target) + "1")
         print(ports)
         for n in ports:
             scan_port(converted_ip, n, time)
@@ -17,7 +17,7 @@ def scan1(target, ports, time=500):
 def scan(target, rangeLB=79, rangeUP=84, time=2):
     try:
         converted_ip = check_ip(target)
-        print('\n' + '[-_0 Scanning Target] ' + str(target)+"2")
+        print('\n' + '[-_0 Scanning Target] ' + str(target) + "2")
         for port in range(rangeLB, rangeUP):
             scan_port(converted_ip, port, time)
     except:
@@ -37,16 +37,23 @@ def get_banner(s):
     return s.recv(1024)
 
 
+banners = []
+open_ports = []
+
+
 def scan_port(ipaddress, port, timeout):
     try:
         sock = socket.socket()
         sock.settimeout(timeout)
         sock.connect((ipaddress, port))
+        # try  decode the banner and add it to the array, if not do nothing
         try:
-            banner = get_banner(sock)
-            print('[+] Open Port ' + str(port) + ' : ' + str(banner.decode().strip('\n')))
+            banner = get_banner(sock).decode().strip('\n').strip('\r')
+            banners.append(banner)
         except:
-            print('[+] Open Port ' + str(port))
+            pass
+        else:
+            open_ports.append(port)
     except:
         pass
     finally:
