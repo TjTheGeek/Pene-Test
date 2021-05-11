@@ -4,8 +4,9 @@ import portScanner
 import portScanner_vulscan as vul
 import sshbrutethreaded as ssh
 import PasswordCracker as ps
-import os.path
 from os import path
+
+from arpspoofer import get_mac_address, spoof
 
 
 def Portscanner_options():
@@ -144,6 +145,20 @@ def passwordCracker():
         ps.crack(type_of_hash, file_path, hash_to_decrypt.strip(' '))
 
 
+def arpSpoofer():
+    target_ip = str(input("Enter target ip")).strip(' ')
+    router_ip = str(input("Enter router ip")).strip(' ')
+    target_mac = str(get_mac_address(target_ip))
+    router_mac = str(get_mac_address(router_ip))
+    try:
+        while True:
+            spoof(router_ip, target_ip, router_mac, target_mac)
+            time.sleep(2)
+    except KeyboardInterrupt:
+        print('Closing ARP Spoofer.')
+        exit(0)
+
+
 if __name__ == '__main__':
 
     print("[1] PortScanner      [2] Vulnerability Scanner     [3] SSH Bruteforce")
@@ -156,6 +171,8 @@ if __name__ == '__main__':
         SSH()
     elif option == "4":
         passwordCracker()
+    elif option == "5":
+        arpSpoofer()
     else:
         print("Not an option")
 
