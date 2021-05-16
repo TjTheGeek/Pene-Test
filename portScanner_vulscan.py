@@ -2,16 +2,16 @@ import socket
 from IPy import IP
 
 
-def scan1(target, ports, time=500):
+def scan1(target, portsArray, time):
     try:
         converted_ip = check_ip(target)
     except:
         pass
     else:
-        print('\n' + '[-_0 Scanning Target] ' + str(target) + "1")
-        print(ports)
-        for n in ports:
-            scan_port(converted_ip, n, time)
+        print('\n' + '[-_0 Scanning Target] ' + str(target))
+        print(portsArray)
+        for port in portsArray:
+            scan_port(converted_ip, port, time)
 
 
 def scan(target, rangeLB=79, rangeUP=84, time=2):

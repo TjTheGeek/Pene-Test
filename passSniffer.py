@@ -54,11 +54,16 @@ def pkt_parser(packet):
         pass
 
 
-if __name__ == "__main__":
-    interface = input("Enter Interface i.e 'eth0'")  # make its user input
-
+if __name__ == '__main__':
     try:
+        interface = 'en0'  # make its user input
         sniff(iface=interface, prn=pkt_parser, store=0)
     except KeyboardInterrupt:
         print('Exiting')
+        exit(0)
+    except Scapy_Exception:
+        print('Make sure your running Scapy as root ! (sudo)')
+        exit(0)
+    except:
+        print('Interface not found')
         exit(0)
