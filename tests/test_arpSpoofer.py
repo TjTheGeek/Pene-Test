@@ -1,6 +1,6 @@
 import unittest
 
-from arpSpoofer import get_mac_address
+from arpspoofer2 import get_mac_address
 
 
 class MyTestCase(unittest.TestCase):

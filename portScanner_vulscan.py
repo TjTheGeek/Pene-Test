@@ -1,4 +1,5 @@
 import socket
+
 from IPy import IP
 
 
@@ -48,7 +49,7 @@ def scan_port(ipaddress, port, timeout):
         sock.connect((ipaddress, port))
         # try  decode the banner and add it to the array, if not do nothing
         try:
-            banner = get_banner(sock).decode().strip('\n').strip('\r')
+            banner = get_banner(sock).decode().strip('\n').strip('\r').lower()
             banners.append(banner)
         except:
             pass
@@ -64,6 +65,8 @@ if __name__ == "__main__":
     targets = input('[+] Enter Target/s To Scan(split multiple targets with ,): ')
     ports = input('[+] Enter Port/s To Scan(multiple ports with - for range or , for specific ports): ')
     time = int(input('[+] Enter timeout time in seconds '))
+    vul_File = input('[+] Input file with banners to search for')
+
     value = int(0)
     portsArray = []
 
@@ -71,14 +74,12 @@ if __name__ == "__main__":
     if '-' not in ports:
         for port in ports.split(','):
             portsArray.append(int(port.strip(' ')))
-            value = 1
+
     else:
         for port in ports.split('-'):
             portsArray.append(int(port.strip(' ')))
             # makes sure the range is in order
             portsArray.sort()
-
-    print("The value is: " + str(value))
 
     if ',' in targets:
         for ip_add in targets.split(','):
@@ -92,3 +93,16 @@ if __name__ == "__main__":
             scan(targets.strip(' '), portsArray[0], portsArray[1], time)
         else:
             scan1(targets.strip(' '), portsArray, time)
+
+    with open(vul_File, 'r') as file:
+        once, count = 0, 0
+
+        for banner in banners:
+            file.seek(0)
+            for line in file.readlines():
+                if line.strip().lower() in banner:
+                    once = 1
+                    print('[!!] VULNERABLE BANNER: "' + banner + '" ON PORT: ' + str(open_ports[count]))
+            count += 1
+            if once == 0:
+                print('No Matching Banners in File for ' + banner)

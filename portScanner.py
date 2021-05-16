@@ -1,4 +1,5 @@
 import socket
+
 from IPy import IP
 
 
@@ -8,8 +9,7 @@ def scan1(target, portArray, timeout):
     except:
         pass
     else:
-        print('\n' + '[-_0 Scanning Target] ' + str(converted_ip))
-        print(portArray)
+        print('\n' + '[-_0 Scanning Target] ' + str(target))
         for portnum in portArray:
             scan_port(converted_ip, portnum, timeout)
 
@@ -17,7 +17,7 @@ def scan1(target, portArray, timeout):
 def scanRange(target, rangeLB, rangeUP, timeout):
     try:
         converted_ip = check_ip(target)[0]
-        print('\n' + '[-_0 Scanning Target] ' + str(target) + "2")
+        print('\n' + '[-_0 Scanning Target] ' + str(target))
         for port in range(rangeLB, rangeUP + 1):
             scan_port(converted_ip, port, timeout)
     except:
@@ -55,6 +55,7 @@ def scan_port(ipaddress, port, timeout):
         pass
     finally:  # then close the connection
         sock.close()
+
 
 if __name__ == "__main__":
     try:
@@ -139,3 +140,4 @@ if __name__ == "__main__":
                 scan1(targets, portsArray, time)
     except KeyboardInterrupt:
         print('\n\nbye.')
+        exit(0)

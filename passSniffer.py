@@ -1,7 +1,7 @@
-from scapy.all import *
-from urllib import parse
 import re
+from urllib import parse
 
+from scapy.all import *
 from scapy.layers.inet import TCP, IP
 
 
