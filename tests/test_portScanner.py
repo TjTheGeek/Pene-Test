@@ -1,4 +1,5 @@
 import unittest
+
 import portScanner
 
 
@@ -29,7 +30,6 @@ class ScanPortTest(unittest.TestCase):
         ipaddress = 'not a a domain '  # youtube.com ipaddress
         result = portScanner.check_ip(ipaddress)
         self.assertEqual(result[1], False)
-
 
 
 if __name__ == '__main__':
