@@ -53,7 +53,6 @@ def pkt_parser(packet):
     else:
         pass
 
-
 if __name__ == '__main__':
     try:
         interface = 'en0'  # make its user input
