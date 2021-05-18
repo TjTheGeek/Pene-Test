@@ -10,17 +10,22 @@ def crack(type_of_hash, file_path, hash_to_decrypt):
                 hash_object = hashlib.md5(line.strip().encode())
                 hashed_word = hash_object.hexdigest()
                 if hashed_word == hash_to_decrypt.lower():
-                    return 1
-                    # print('Found MD5 Password: ' + line.strip())
-                    # exit(0)
+                    print('Found MD5 Password: ' + line.strip())
+                    exit(0)
 
             if type_of_hash == 'sha1':
                 hash_object = hashlib.sha1(line.strip().encode())
                 hashed_word = hash_object.hexdigest()
                 if hashed_word == hash_to_decrypt.lower():
-                    return 2
-                    # print('Found Sha1 Password: ' + line.strip())
-                    # exit(0)
+                    print('Found Sha1 Password: ' + line.strip())
+                    exit(0)
+
+            if type_of_hash == 'sha256':
+                hash_object = hashlib.sha256(line.strip().encode())
+                hashed_word = hash_object.hexdigest()
+                if hashed_word == hash_to_decrypt.lower():
+                    print('Found Sha-256 Password: ' + line.strip())
+                    exit(0)
 
         print('Password Not In File.')
 
@@ -32,12 +37,14 @@ if __name__ == "__main__":
 
         while not thr:
             type_of_hash = str(input('Choose a Hash to decrypt:\n [1] SHA-1  [2]MD-5 ')).strip(' ')
-            if type_of_hash == "1" or type_of_hash == "2":
+            if type_of_hash == "1" or type_of_hash == "2" or type_of_hash == "3":
                 thr = True
                 if type_of_hash == "1":
                     type_of_hash = "sha1"
-                else:
+                elif type_of_hash == "2":
                     type_of_hash = "md5"
+                else:
+                    type_of_hash = "sha256"
             else:
                 pass
 
