@@ -179,19 +179,19 @@ def SSH():
 
 def passwordCracker():
     try:
-        type_of_hash, file_path = str(), str()
-        print('_____Password Cracker____')
-        hash_to_decrypt = str(input('[+] Enter md5 or sha1 hash to decrypt or hashes using ",": '))
+        hash_to_decrypt = str(input('[+] Enter hash to decrypt or hashes using ",": '))
         fr, thr = False, False
 
         while not thr:
             type_of_hash = str(input('Choose a Hash to decrypt:\n [1] SHA-1  [2]MD-5 ')).strip(' ')
-            if type_of_hash == "1" or type_of_hash == "2":
+            if type_of_hash == "1" or type_of_hash == "2" or type_of_hash == "3":
                 thr = True
                 if type_of_hash == "1":
                     type_of_hash = "sha1"
-                else:
+                elif type_of_hash == "2":
                     type_of_hash = "md5"
+                else:
+                    type_of_hash = "sha256"
             else:
                 pass
 
@@ -207,7 +207,6 @@ def passwordCracker():
     else:
         for hash in hash_to_decrypt.split(','):
             ps.crack(type_of_hash, file_path, hash)
-
 
 def arpSpoofer():
     try:
