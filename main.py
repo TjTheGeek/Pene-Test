@@ -3,6 +3,8 @@ import time
 from os import path
 
 from termcolor import colored
+import scapy
+from termcolor import colored, cprint
 
 import passSniffer
 import portScanner
@@ -286,6 +288,25 @@ def arpSpoofer():
                 exit(0)
 
 
+def passwordSniffer():
+    print(colored('_____PASSWORD SNIFFER____', 'on_yellow'))
+    print("\n")
+
+    ir = True
+    while ir:
+        interface = input("interface i.e en0 or ethernet: ")  # make its user input
+        try:
+            sniff(iface=interface, prn=pkt_parser, store=0)
+        except KeyboardInterrupt:
+            print('Exiting')
+            exit(0)
+        except scapy.error.Scapy_Exception as e:
+            if 'root' in str(e):
+                cprint(colored("WARNING ", "red", attrs=['bold']) + colored('Not running application as Sudo!!', 'red'))
+            elif 'BIOCSETIF' in str(e):
+                cprint(colored('Not a valid interface interface', 'red'))
+            else:
+                print(str(e))
 
 
 if __name__ == '__main__':
