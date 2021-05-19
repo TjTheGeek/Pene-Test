@@ -277,9 +277,35 @@ def arpSpoofer():
 
 if __name__ == '__main__':
     try:
+        print('\n')
+        print(colored("Welcome to PENE TEST", color="grey", on_color="on_cyan", attrs=['bold', 'underline']))
+        print('\n')
         opr = False
         while not opr:  # if input is invalid keep asking the question
+            print(colored('[1] PortScanner  ', on_color='on_green') +
+                   colored("[2] Vulnerability Scanner", on_color='on_cyan') +
+                   colored("[3] SSH Bruteforce  ", on_color='on_magenta')
+                   )
+            print(colored("[4] ARPSpoofer   ", on_color='on_blue') +
+                   colored("[5] Password Sniffer     ", on_color='on_red') +
+                   colored("[6] Password Cracker", on_color='on_grey')
+                   )
+            option = input(colored("\nChoose a number: ", attrs=["bold"])).strip(' ')
+
+            if option == '1':
+                portScannerf()
+            elif option == '2':
+                vulScan()
+            elif option == '3':
+                sshBruteForcer()
+            elif option == '4':
+                arpSpoofer()
+            elif option == '5':
+                passwordSniffer()
+            elif option == '6':
+                passwordCracker()
             else:
+                print(colored('0_o Input not recognised\n', color='red', attrs=['bold']))
     except KeyboardInterrupt:
         print('\nBye.')
 
