@@ -8,6 +8,7 @@ import passSniffer
 import portScanner
 import portScanner_vulscan as vul
 import sshbrutethreaded as ssh
+from PasswordCracker import crack
 from arpspoofer2 import get_mac_address, spoof
 from passSniffer import sniff, pkt_parser
 
@@ -186,9 +187,15 @@ def portScannerf():
 
 def passwordCracker():
     try:
+        hash_to_decrypt = str(input(colored('[+] Enter hash to decrypt or hashes using ",": ', color='grey')))
         fr, thr = False, False
 
         while not thr:
+            print(colored('[+] Choose a Hash to decrypt:', color='grey', attrs=list['bold']))
+            type_of_hash = str(
+                input(colored('[1] SHA-1  ', on_color='on_green') + colored('[2]MD-5  ', on_color='on_blue')
+                      + colored('[3]SHA-256  ', on_color='on_cyan'))
+            ).strip(' ')
             if type_of_hash == "1" or type_of_hash == "2" or type_of_hash == "3":
                 thr = True
                 if type_of_hash == "1":
@@ -201,12 +208,18 @@ def passwordCracker():
                 pass
 
         while not fr:  # if file is not right
+            file_path = str(input(colored('[+] Enter path to the password file: ', color='grey')))
             if not path.isfile(file_path):
+                print(colored('File not found\n', 'red') + colored('Try again', color='red', attrs=['bold']))
             else:
                 fr = True
 
     except:
+        print(colored("0_o Error", 'red', attrs=['bold']))
     else:
+        for each_hash in hash_to_decrypt.split(','):
+            crack(type_of_hash, file_path, each_hash)
+
 
 def arpSpoofer():
     try:
