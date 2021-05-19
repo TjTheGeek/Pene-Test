@@ -9,13 +9,14 @@ def scan1(target, portArray, timeout):
     except:
         pass
     else:
-        print('\n' + '[-_0 Scanning Target] ' + str(target))
+        print('\n' + '[-_0 Scanning Target] 1' + str(target))
         for portnum in portArray:
             scan_port(converted_ip, portnum, timeout)
 
 
 def scanRange(target, rangeLB, rangeUP, timeout):
     try:
+
         converted_ip = check_ip(target)[0]
         print('\n' + '[-_0 Scanning Target] ' + str(target))
         for port in range(rangeLB, rangeUP + 1):
@@ -51,10 +52,10 @@ def scan_port(ipaddress, port, timeout):
             print('[+] Open Port ' + str(port) + ' : ' + str(banner.decode().strip('\n')))
         except:  # if not just say the port is open
             print('[+] Open Port ' + str(port))
+        finally:  # then close the connection
+            sock.close()
     except:  # if theses an error connecting do nothing, go to the next
         pass
-    finally:  # then close the connection
-        sock.close()
 
 
 if __name__ == "__main__":
@@ -62,7 +63,7 @@ if __name__ == "__main__":
         pr, tr, tmr = False, False, False
         time, ports, targets = str(), str(), str()
         while not tr:  # Keep repeating the question until user inputs are valid
-            targets = input('[+] Enter Target/s To Scan(split multiple targets with ,): ').strip(' ')
+            targets = input('[+] Enter Target/s To Scan(split multiple targets with): ').strip(' ')
 
             for ip_add in targets.split(','):  # for every ip address in the inputted targets target
                 if check_ip(ip_add.strip(' '))[1]:  # check if its a valid ip
@@ -129,6 +130,7 @@ if __name__ == "__main__":
                     scanRange(ip_add, portsArray[0], portsArray[1], time)
                 else:
                     scan1(ip_add, portsArray, time)
+
         else:
             print('There is a single target: no "," detected')
             if value != 1:

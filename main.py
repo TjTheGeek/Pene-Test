@@ -2,7 +2,9 @@ import threading
 import time
 from os import path
 
-import PasswordCracker as ps
+from termcolor import colored
+
+import passSniffer
 import portScanner
 import portScanner_vulscan as vul
 import sshbrutethreaded as ssh
@@ -10,19 +12,19 @@ from arpspoofer2 import get_mac_address, spoof
 from passSniffer import sniff, pkt_parser
 
 
-def Portscanner_options():
+def portScannerf():
     print('_____PORTSCANNER____')
     try:
         pr, tr, tmr = False, False, False
         time, ports, targets = str(), str(), str()
         while not tr:  # Keep repeating the question until user inputs are valid
-            targets = input('[+] Enter Target/s To Scan(split multiple targets with ,): ').strip(' ')
+            targets = input('[+] Enter Target/s To Scan(split multiple targets with): ').strip(' ')
 
             for ip_add in targets.split(','):  # for every ip address in the inputted targets target
                 if portScanner.check_ip(ip_add.strip(' '))[1]:  # check if its a valid ip
                     tr = True
                 else:  # if not print the error and ask the question again, by breaking the loop
-                    print("Input error: " + ip_add)
+                    print(ip_add + ' not an ip address')
                     tr = False
                     break
 
@@ -74,24 +76,30 @@ def Portscanner_options():
                 portsArray.append(int(port.strip(' ')))
             value = 1
 
+        print("The value is: " + str(value))
 
         if ',' in targets:
+            print('There are multiple targets: "," detected')
             for ip_add in targets.split(','):
                 if value != 1:
                     portScanner.scanRange(ip_add, portsArray[0], portsArray[1], time)
                 else:
                     portScanner.scan1(ip_add, portsArray, time)
+
         else:
+            print('There is a single target: no "," detected')
             if value != 1:
+                print('Range')
                 portScanner.scanRange(targets.strip(' '), portsArray[0], portsArray[1], time)
             else:
+                print('Single')
                 print(targets, portsArray, time)
                 portScanner.scan1(targets, portsArray, time)
     except KeyboardInterrupt:
         print('\n\nbye.')
+        exit(0)
 
 
-def Vulscan():
     try:
         print('_____VulnerabiltyScanner____')
         targets = input('[+] Enter Target/s To Scan(split multiple targets with ,): ')
@@ -143,7 +151,6 @@ def Vulscan():
         exit(0)
 
 
-def SSH():
     try:
         print('_____SSH BRUTEFORCER____')
         host = input('[+] Target Address: ')
@@ -179,11 +186,9 @@ def SSH():
 
 def passwordCracker():
     try:
-        hash_to_decrypt = str(input('[+] Enter hash to decrypt or hashes using ",": '))
         fr, thr = False, False
 
         while not thr:
-            type_of_hash = str(input('Choose a Hash to decrypt:\n [1] SHA-1  [2]MD-5 ')).strip(' ')
             if type_of_hash == "1" or type_of_hash == "2" or type_of_hash == "3":
                 thr = True
                 if type_of_hash == "1":
@@ -196,17 +201,12 @@ def passwordCracker():
                 pass
 
         while not fr:  # if file is not right
-            file_path = str(input('Enter path to the file to bruteforce with: '))
             if not path.isfile(file_path):
-                print('File not found\nTry again')
             else:
                 fr = True
 
     except:
-        print("0_o Error")
     else:
-        for hash in hash_to_decrypt.split(','):
-            ps.crack(type_of_hash, file_path, hash)
 
 def arpSpoofer():
     try:
@@ -273,32 +273,13 @@ def arpSpoofer():
                 exit(0)
 
 
-def password_sniffer():
-    try:
-        print('_____PASSWORD SNIFFER____')
-        interface = input("Enter Interface i.e 'eth0'")  # make its user input
-        sniff(iface=interface, prn=pkt_parser, store=0)
-    except KeyboardInterrupt:
-        print('Exiting')
-        exit(0)
 
 
 if __name__ == '__main__':
     try:
-        print("__PENE TEST__\n\n")
         opr = False
         while not opr:  # if input is invalid keep asking the question
-            option = input(
-                "[1] PortScanner  [2] Vulnerability Scanner  [3] SSH Bruteforce \n[4] ARPSpoofer   [5] Password "
-                "Sniffer       [ "
-                "6] Password Cracker\nChoose a number: ").strip(' ')
-            if option == '1' or option == '2' or option == '3' or option == '4' or option == '5' or option == '6':
-                opr = True
             else:
-                print('input not recongised\n')
     except KeyboardInterrupt:
         print('\nBye.')
 
-    else:
-        options = [Portscanner_options(), Vulscan(), SSH(), arpSpoofer(), password_sniffer(), passwordCracker()]
-        options[int(option)]
