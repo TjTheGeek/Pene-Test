@@ -4,6 +4,18 @@ from os import path
 from IPy import IP
 from termcolor import colored
 
+resultsOfScan = []
+
+
+def noneType(list):  # removes every appearance of none
+    noneType = True
+    while noneType:
+        if None in list:
+            list.remove(None)
+        else:
+            noneType = False
+    return list
+
 
 def scan1(target, portsArray, time):
     try:
@@ -14,7 +26,9 @@ def scan1(target, portsArray, time):
         print('\n' + '[-_0 Scanning Target] ' + str(target))
         print(portsArray)
         for port in portsArray:
-            return scan_port(converted_ip, port, time)
+            resultsOfScan.append(scan_port(converted_ip, port, time))
+
+    return noneType(resultsOfScan)
 
 
 def scan(target, rangeLB=79, rangeUP=84, time=2):
@@ -22,9 +36,11 @@ def scan(target, rangeLB=79, rangeUP=84, time=2):
         converted_ip = check_ip(target)[0]
         print('\n' + '[-_0 Scanning Target] ' + str(target) + "2")
         for port in range(rangeLB, rangeUP):
-            return scan_port(converted_ip, port, time)
+            resultsOfScan.append(scan_port(converted_ip, port, time))
     except:
         pass
+
+    return noneType(resultsOfScan)
 
 
 # check if the domain or ipaddress is formatted correctly
@@ -74,15 +90,17 @@ if __name__ == "__main__":
         while not right_choice[0]:
             targets = str(input('\n[+] Enter Target/s To Scan(split multiple targets with ,): ')).strip(' ')
             for ip_add in targets.split(','):
-                if check_ip(ip_add)[1]==False:
+                if check_ip(ip_add)[1] == False:
                     right_choice[0] = False
-                    print(colored(ip_add, on_color='on_red', attrs=['underline']) + colored(' not an ipaddress', color='red'))
+                    print(colored(ip_add, on_color='on_red', attrs=['underline']) +
+                          colored(' not an ipaddress', color='red'))
                     break
                 else:
                     right_choice[0] = True
-        while not right_choice[1]:
 
-            ports = input('\n[+] Enter Port/s To Scan(multiple ports with - for range or , for specific ports): ').strip(' ')
+        while not right_choice[1]:
+            ports = input(
+                '\n[+] Enter Port/s To Scan(multiple ports with - for range or , for specific ports): ').strip(' ')
             if '-' not in ports:  # if it not a range i.e specific port(s)
                 port_is_range = False
                 for port in ports.split(','):
@@ -91,8 +109,8 @@ if __name__ == "__main__":
                         right_choice[1] = True
                     else:  # if a input isn't a number, ask the the question again
                         right_choice[1] = False
-                        print(colored(port, on_color='on_red', attrs=['underline']) + colored(' not a valid port number',
-                                                                                         color='red'))
+                        print(colored(port, on_color='on_red', attrs=['underline'])
+                              + colored(' not a valid port number', color='red'))
                         break
             else:  # if its a range
                 port_is_range = True
@@ -102,11 +120,11 @@ if __name__ == "__main__":
                         right_choice[1] = True
                     else:
                         right_choice[1] = False
-                        print(colored(port, color='grey', attrs=['underline']) + colored(' not a valid port number',
-                                                                                         color='red'))
+                        print(colored(port, color='grey', attrs=['underline']) +
+                              colored(' not a valid port number', color='red'))
                         break
 
-                    # makes sure the range is in order
+        # makes sure the range is in order
         # in case they input higher port first
         port_array.sort()
         while not right_choice[2]:
@@ -165,4 +183,3 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print('bye.')
         exit(0)
-
