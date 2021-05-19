@@ -2,7 +2,6 @@ import threading
 import time
 from os import path
 
-from termcolor import colored
 import scapy
 from termcolor import colored, cprint
 
@@ -103,57 +102,112 @@ def portScannerf():
         exit(0)
 
 
+def vulScan():
     try:
-        print('_____VulnerabiltyScanner____')
-        targets = input('[+] Enter Target/s To Scan(split multiple targets with ,): ')
-        ports = input('[+] Enter Port/s To Scan(multiple ports with - for range or , for specific ports): ')
-        vul_file = input('[+] * Enter Path To The File With Vulnerable Softwares: ')
-        timeout_time = int(input('[+] Enter timeout time in seconds '))
-        value = int(0)
-        portsArray = []
-
-        # if it not a range i.e specific port(s)
-        if '-' not in ports:
-            for port in ports.split(','):
-                portsArray.append(int(port.strip(' ')))
-                value = 1
-        else:
-            for port in ports.split('-'):
-                portsArray.append(int(port.strip(' ')))
-                # makes sure the range is in order
-                portsArray.sort()
-
-        if ',' in targets:
+        right_choice = [False, False, False, False]
+        port_is_range = bool()
+        banner_array = []
+        port_array = []
+        while not right_choice[0]:
+            targets = str(input('\n[+] Enter Target/s To Scan(split multiple targets with ,): ')).strip(' ')
             for ip_add in targets.split(','):
-                if value != 1:
-                    vul.scan(ip_add, portsArray[0], portsArray[1], timeout_time)
+                if vul.check_ip(ip_add)[1] == False:
+                    right_choice[0] = False
+                    print(colored(ip_add, on_color='on_red', attrs=['underline']) + colored(' not an ipaddress',
+                                                                                            color='red'))
+                    break
                 else:
-                    vul.scan1(ip_add, portsArray, timeout_time)
-        else:
-            # if its not a specific target or targets i.e a range
-            if value != 1:
-                vul.scan(targets.strip(' '), portsArray[0], portsArray[1], timeout_time)
+                    right_choice[0] = True
+        while not right_choice[1]:
+
+            ports = input(
+                '\n[+] Enter Port/s To Scan(multiple ports with - for range or , for specific ports): ').strip(' ')
+            if '-' not in ports:  # if it not a range i.e specific port(s)
+                port_is_range = False
+                for port in ports.split(','):
+                    if port.isdigit():  # check if each port theyve entered is an whole number
+                        port_array.append(int(port))  # add it it to the array
+                        right_choice[1] = True
+                    else:  # if a input isn't a number, ask the the question again
+                        right_choice[1] = False
+                        print(
+                            colored(port, on_color='on_red', attrs=['underline']) +
+                            colored(' not a valid port number', color='red'))
+                        break
+            else:  # if its a range
+                port_is_range = True
+                for port in ports.split('-'):
+                    if port.isdigit():  # check if each ports they've entered is an whole number
+                        port_array.append(int(port))
+                        right_choice[1] = True
+                    else:
+                        right_choice[1] = False
+                        print(colored(port, color='grey', attrs=['underline']) +
+                              colored(' not a valid port number', color='red'))
+                        break
+
+                    # makes sure the range is in order
+        # in case they input higher port first
+        port_array.sort()
+        while not right_choice[2]:
+            time = input('\n[+] Enter timeout time in seconds ').strip(' ')
+            if time.isdigit():
+                right_choice[2] = True
             else:
-                vul.scan1(targets.strip(' '), portsArray, timeout_time)
-        try:
-            with open(vul_file, 'r') as file:
-                count = 0
-                for banner in vul.banners:
-                    file.seek(0)
-                    for line in file.readlines():
-                        if line.strip() in banner:
-                            print('[!!] VULNERABLE BANNER: "' + banner + '" ON PORT: ' + str(
-                                vul.open_ports[count]))
-                    count += 1
-        except FileNotFoundError:
-            print("File not accessible")
-        finally:
-            file.close()
+                right_choice[2] = False
+
+        while not right_choice[3]:
+            vul_File = input('\n[+] Input file with banners to search for')
+            if not path.isfile(vul_File):
+                print(colored('File Not Found !', color='red'))
+            else:
+                right_choice[3] = True
+
+        for ip_add in targets.split(','):
+            if port_is_range:
+                banner_port = vul.scan(ip_add, port_array[0], port_array[1], int(time))
+                if None in banner_port:
+                    pass
+                else:
+                    banner_array.append(banner_port[0].lower())
+                    port_array.append(banner_port[1])
+            else:
+                banner_port = vul.scan1(ip_add, port_array, int(time))
+                if None in banner_port:
+                    pass
+                else:
+                    banner_array.append(banner_port[0])
+                    port_array.append(banner_port[1])
+
+        if len(banner_array) != 0:
+            with open(vul_File, 'r') as file:
+                once = count = 0
+                for line in file.readlines():
+                    if line.lower() in banner_array:
+                        once = 1
+                        print(
+                            colored('[!!] VULNERABLE BANNER: ', 'green') +
+                            colored(line, 'cyan', attrs=['bold', 'underline', 'reverse']) +
+                            colored('" ON PORT: ', 'green') +
+                            colored(str(vul.open_ports[banner_array.index(line.lower())]), color='cyan',
+                                    attrs=['bold', 'underline', 'reverse'])
+                        )
+
+            view_all = input(colored('Would you like it see all banners found ?', 'yellow')).strip()
+            if 'y' in view_all:
+                for x in range(len(banner_array)):
+                    print(colored('Banner: ', on_color='on_green') +
+                          colored(banner_array[x], 'yellow', attrs=['underline', 'bold']) +
+                          colored('on Port: ', on_color='on_green') +
+                          colored(port_array[x], 'yellow', attrs=['underline', 'bold']))
+            else:
+                exit(0)
     except KeyboardInterrupt:
-        print('bye')
+        print('bye.')
         exit(0)
 
 
+def sshBruteForcer():
     try:
         print('_____SSH BRUTEFORCER____')
         host = input('[+] Target Address: ')
@@ -317,13 +371,13 @@ if __name__ == '__main__':
         opr = False
         while not opr:  # if input is invalid keep asking the question
             print(colored('[1] PortScanner  ', on_color='on_green') +
-                   colored("[2] Vulnerability Scanner", on_color='on_cyan') +
-                   colored("[3] SSH Bruteforce  ", on_color='on_magenta')
-                   )
+                  colored("[2] Vulnerability Scanner", on_color='on_cyan') +
+                  colored("[3] SSH Bruteforce  ", on_color='on_magenta')
+                  )
             print(colored("[4] ARPSpoofer   ", on_color='on_blue') +
-                   colored("[5] Password Sniffer     ", on_color='on_red') +
-                   colored("[6] Password Cracker", on_color='on_grey')
-                   )
+                  colored("[5] Password Sniffer     ", on_color='on_red') +
+                  colored("[6] Password Cracker", on_color='on_grey')
+                  )
             option = input(colored("\nChoose a number: ", attrs=["bold"])).strip(' ')
 
             if option == '1':
@@ -342,4 +396,3 @@ if __name__ == '__main__':
                 print(colored('0_o Input not recognised\n', color='red', attrs=['bold']))
     except KeyboardInterrupt:
         print('\nBye.')
-

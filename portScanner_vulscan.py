@@ -1,6 +1,8 @@
 import socket
+from os import path
 
 from IPy import IP
+from termcolor import colored
 
 
 def scan1(target, portsArray, time):
@@ -12,15 +14,15 @@ def scan1(target, portsArray, time):
         print('\n' + '[-_0 Scanning Target] ' + str(target))
         print(portsArray)
         for port in portsArray:
-            scan_port(converted_ip, port, time)
+            return scan_port(converted_ip, port, time)
 
 
 def scan(target, rangeLB=79, rangeUP=84, time=2):
     try:
-        converted_ip = check_ip(target)
+        converted_ip = check_ip(target)[0]
         print('\n' + '[-_0 Scanning Target] ' + str(target) + "2")
         for port in range(rangeLB, rangeUP):
-            scan_port(converted_ip, port, time)
+            return scan_port(converted_ip, port, time)
     except:
         pass
 
@@ -29,9 +31,12 @@ def scan(target, rangeLB=79, rangeUP=84, time=2):
 def check_ip(ip):
     try:
         IP(ip)
-        return ip
+        return ip, True
     except ValueError:
-        return "Domain or Ip incorrect: " + str(ip)
+        try:  # convert the ip
+            return socket.gethostbyname(ip), True
+        except socket.gaierror:  # incorrect input
+            return print('Input error'), False
 
 
 def get_banner(s):
@@ -50,59 +55,114 @@ def scan_port(ipaddress, port, timeout):
         # try  decode the banner and add it to the array, if not do nothing
         try:
             banner = get_banner(sock).decode().strip('\n').strip('\r').lower()
-            banners.append(banner)
         except:
             pass
-        else:
-            open_ports.append(port)
+        else:  # if it get the banner, return the banner and the corresponding port
+            return banner, port
+        finally:
+            sock.close()
     except:
         pass
-    finally:
-        sock.close()
 
 
 if __name__ == "__main__":
-    targets = input('[+] Enter Target/s To Scan(split multiple targets with ,): ')
-    ports = input('[+] Enter Port/s To Scan(multiple ports with - for range or , for specific ports): ')
-    time = int(input('[+] Enter timeout time in seconds '))
-    vul_File = input('[+] Input file with banners to search for')
+    try:
+        right_choice = [False, False, False, False]
+        port_is_range = bool()
+        banner_array = []
+        port_array = []
+        while not right_choice[0]:
+            targets = str(input('\n[+] Enter Target/s To Scan(split multiple targets with ,): ')).strip(' ')
+            for ip_add in targets.split(','):
+                if check_ip(ip_add)[1]==False:
+                    right_choice[0] = False
+                    print(colored(ip_add, on_color='on_red', attrs=['underline']) + colored(' not an ipaddress', color='red'))
+                    break
+                else:
+                    right_choice[0] = True
+        while not right_choice[1]:
 
-    value = int(0)
-    portsArray = []
+            ports = input('\n[+] Enter Port/s To Scan(multiple ports with - for range or , for specific ports): ').strip(' ')
+            if '-' not in ports:  # if it not a range i.e specific port(s)
+                port_is_range = False
+                for port in ports.split(','):
+                    if port.isdigit():  # check if each port theyve entered is an whole number
+                        port_array.append(int(port))  # add it it to the array
+                        right_choice[1] = True
+                    else:  # if a input isn't a number, ask the the question again
+                        right_choice[1] = False
+                        print(colored(port, on_color='on_red', attrs=['underline']) + colored(' not a valid port number',
+                                                                                         color='red'))
+                        break
+            else:  # if its a range
+                port_is_range = True
+                for port in ports.split('-'):
+                    if port.isdigit():  # check if each ports they've entered is an whole number
+                        port_array.append(int(port))
+                        right_choice[1] = True
+                    else:
+                        right_choice[1] = False
+                        print(colored(port, color='grey', attrs=['underline']) + colored(' not a valid port number',
+                                                                                         color='red'))
+                        break
 
-    # if it not a range i.e specific port(s)
-    if '-' not in ports:
-        for port in ports.split(','):
-            portsArray.append(int(port.strip(' ')))
-
-    else:
-        for port in ports.split('-'):
-            portsArray.append(int(port.strip(' ')))
-            # makes sure the range is in order
-            portsArray.sort()
-
-    if ',' in targets:
-        for ip_add in targets.split(','):
-            if value != 1:
-                scan(ip_add, portsArray[0], portsArray[1], time)
+                    # makes sure the range is in order
+        # in case they input higher port first
+        port_array.sort()
+        while not right_choice[2]:
+            time = input('\n[+] Enter timeout time in seconds ').strip(' ')
+            if time.isdigit():
+                right_choice[2] = True
             else:
-                scan1(ip_add, portsArray, time)
-    else:
-        # if its not a specific target or targets i.e a range
-        if value != 1:
-            scan(targets.strip(' '), portsArray[0], portsArray[1], time)
-        else:
-            scan1(targets.strip(' '), portsArray, time)
+                right_choice[2] = False
 
-    with open(vul_File, 'r') as file:
-        once, count = 0, 0
+        while not right_choice[3]:
+            vul_File = input('\n[+] Input file with banners to search for')
+            if not path.isfile(vul_File):
+                print(colored('File Not Found !', color='red'))
+            else:
+                right_choice[3] = True
 
-        for banner in banners:
-            file.seek(0)
-            for line in file.readlines():
-                if line.strip().lower() in banner:
-                    once = 1
-                    print('[!!] VULNERABLE BANNER: "' + banner + '" ON PORT: ' + str(open_ports[count]))
-            count += 1
-            if once == 0:
-                print('No Matching Banners in File for ' + banner)
+        for ip_add in targets.split(','):
+            if port_is_range:
+                banner_port = scan(ip_add, port_array[0], port_array[1], int(time))
+                if None in banner_port:
+                    pass
+                else:
+                    banner_array.append(banner_port[0].lower())
+                    port_array.append(banner_port[1])
+            else:
+                banner_port = scan1(ip_add, port_array, int(time))
+                if None in banner_port:
+                    pass
+                else:
+                    banner_array.append(banner_port[0])
+                    port_array.append(banner_port[1])
+
+        if len(banner_array) != 0:
+            with open(vul_File, 'r') as file:
+                once = count = 0
+                for line in file.readlines():
+                    if line.lower() in banner_array:
+                        once = 1
+                        print(
+                            colored('[!!] VULNERABLE BANNER: ', 'green') +
+                            colored(line, 'cyan', attrs=['bold', 'underline', 'reverse']) +
+                            colored('" ON PORT: ', 'green') +
+                            colored(str(open_ports[banner_array.index(line.lower())]), color='cyan',
+                                    attrs=['bold', 'underline', 'reverse'])
+                        )
+
+            view_all = input(colored('Would you like it see all banners found ?', 'yellow')).strip()
+            if 'y' in view_all:
+                for x in range(len(banner_array)):
+                    print(colored('Banner: ', on_color='on_green') +
+                          colored(banner_array[x], 'yellow', attrs=['underline', 'bold']) +
+                          colored('on Port: ', on_color='on_green') +
+                          colored(port_array[x], 'yellow', attrs=['underline', 'bold']))
+            else:
+                exit(0)
+    except KeyboardInterrupt:
+        print('bye.')
+        exit(0)
+
