@@ -1,21 +1,22 @@
+import os
 import threading
 import time
 from os import path
 
-import scapy
-from termcolor import colored, cprint
+from termcolor import colored
 
-import passSniffer
 import portScanner
 import portScanner_vulscan as vul
 import sshbrutethreaded as ssh
 from PasswordCracker import crack
 from arpspoofer2 import get_mac_address, spoof
+import scapy
 from passSniffer import sniff, pkt_parser
 
 
 def portScannerf():
     print('_____PORTSCANNER____')
+
     try:
         pr, tr, tmr = False, False, False
         time, ports, targets = str(), str(), str()
@@ -118,8 +119,8 @@ def vulScan():
                     break
                 else:
                     right_choice[0] = True
-        while not right_choice[1]:
 
+        while not right_choice[1]:
             ports = input(
                 '\n[+] Enter Port/s To Scan(multiple ports with - for range or , for specific ports): ').strip(' ')
             if '-' not in ports:  # if it not a range i.e specific port(s)
@@ -146,9 +147,7 @@ def vulScan():
                               colored(' not a valid port number', color='red'))
                         break
 
-                    # makes sure the range is in order
-        # in case they input higher port first
-        port_array.sort()
+        port_array.sort()  # makes sure the range is in order in case they input higher port first
         while not right_choice[2]:
             time = input('\n[+] Enter timeout time in seconds ').strip(' ')
             if time.isdigit():
@@ -165,26 +164,27 @@ def vulScan():
 
         for ip_add in targets.split(','):
             if port_is_range:
-                banner_port = vul.scan(ip_add, port_array[0], port_array[1], int(time))
-                if None in banner_port:
-                    pass
+                banner_port = vul.scan(ip_add, port_array[0], port_array[1], int(time))  # a list of banners their ports
+
+                if len(banner_port) == 0:
+                    print("No banners found")
                 else:
-                    banner_array.append(banner_port[0].lower())
-                    port_array.append(banner_port[1])
+                    for x in range(len(banner_port)):
+                        banner_array.append(banner_port[x][0].lower())
+                        port_array.append(banner_port[x][1])
             else:
                 banner_port = vul.scan1(ip_add, port_array, int(time))
-                if None in banner_port:
-                    pass
+                if len(banner_port) == 0:
+                    print("No banners found")
                 else:
-                    banner_array.append(banner_port[0])
-                    port_array.append(banner_port[1])
+                    for x in range(len(banner_port)):
+                        banner_array.append(banner_port[x][0].lower())
+                        port_array.append(banner_port[x][1])
 
         if len(banner_array) != 0:
             with open(vul_File, 'r') as file:
-                once = count = 0
                 for line in file.readlines():
                     if line.lower() in banner_array:
-                        once = 1
                         print(
                             colored('[!!] VULNERABLE BANNER: ', 'green') +
                             colored(line, 'cyan', attrs=['bold', 'underline', 'reverse']) +
@@ -194,7 +194,7 @@ def vulScan():
                         )
 
             view_all = input(colored('Would you like it see all banners found ?', 'yellow')).strip()
-            if 'y' in view_all:
+            if 'y' in view_all.lower():
                 for x in range(len(banner_array)):
                     print(colored('Banner: ', on_color='on_green') +
                           colored(banner_array[x], 'yellow', attrs=['underline', 'bold']) +
@@ -345,54 +345,60 @@ def arpSpoofer():
 def passwordSniffer():
     print(colored('_____PASSWORD SNIFFER____', 'on_yellow'))
     print("\n")
-
     ir = True
     while ir:
         interface = input("interface i.e en0 or ethernet: ")  # make its user input
         try:
+            print()
             sniff(iface=interface, prn=pkt_parser, store=0)
         except KeyboardInterrupt:
             print('Exiting')
             exit(0)
         except scapy.error.Scapy_Exception as e:
             if 'root' in str(e):
-                cprint(colored("WARNING ", "red", attrs=['bold']) + colored('Not running application as Sudo!!', 'red'))
+                print(colored("WARNING ", "red", attrs=['bold']) + colored('Not running application as Sudo!!', 'red'))
             elif 'BIOCSETIF' in str(e):
-                cprint(colored('Not a valid interface interface', 'red'))
+                print(colored('Not a valid interface interface', 'red'))
             else:
                 print(str(e))
 
 
 if __name__ == '__main__':
-    try:
-        print('\n')
-        print(colored("Welcome to PENE TEST", color="grey", on_color="on_cyan", attrs=['bold', 'underline']))
-        print('\n')
-        opr = False
-        while not opr:  # if input is invalid keep asking the question
-            print(colored('[1] PortScanner  ', on_color='on_green') +
-                  colored("[2] Vulnerability Scanner", on_color='on_cyan') +
-                  colored("[3] SSH Bruteforce  ", on_color='on_magenta')
-                  )
-            print(colored("[4] ARPSpoofer   ", on_color='on_blue') +
-                  colored("[5] Password Sniffer     ", on_color='on_red') +
-                  colored("[6] Password Cracker", on_color='on_grey')
-                  )
-            option = input(colored("\nChoose a number: ", attrs=["bold"])).strip(' ')
 
-            if option == '1':
-                portScannerf()
-            elif option == '2':
-                vulScan()
-            elif option == '3':
-                sshBruteForcer()
-            elif option == '4':
-                arpSpoofer()
-            elif option == '5':
-                passwordSniffer()
-            elif option == '6':
-                passwordCracker()
-            else:
-                print(colored('0_o Input not recognised\n', color='red', attrs=['bold']))
-    except KeyboardInterrupt:
-        print('\nBye.')
+    if os.geteuid() == 0:
+        try:
+            print('\n')
+            print(colored("Welcome to PENE TEST", color="grey", on_color="on_cyan", attrs=['bold', 'underline']))
+            print('\n')
+            opr = False
+            while not opr:  # if input is invalid keep asking the question
+                print(colored('[1] PortScanner  ', on_color='on_green') +
+                      colored("[2] Vulnerability Scanner", on_color='on_cyan') +
+                      colored("[3] SSH Bruteforce  ", on_color='on_magenta')
+                      )
+                print('-' * 65)
+                print(colored("[4] ARPSpoofer   ", on_color='on_blue') +
+                      colored("[5] Password Sniffer     ", on_color='on_red', attrs=['dark']) +
+                      colored("[6] Password Cracker", on_color='on_grey')
+                      )
+                option = input(colored("\nChoose a number: ", attrs=["bold"])).strip(' ')
+
+                if option == '1':
+                    portScannerf()
+                elif option == '2':
+                    vulScan()
+                elif option == '3':
+                    sshBruteForcer()
+                elif option == '4':
+                    arpSpoofer()
+                elif option == '5':
+                    passwordSniffer()
+                elif option == '6':
+                    passwordCracker()
+                else:
+                    print(colored('0_o Input not recognised\n', color='red', attrs=['bold']))
+        except KeyboardInterrupt:
+            print('\nBye.')
+    else:
+        print(colored("WARNING Not running application as Root!!", "red", attrs=['bold', 'reverse']))
+        exit(0)
