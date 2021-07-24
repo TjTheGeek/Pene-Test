@@ -19,7 +19,7 @@ def portScannerf():
 
     try:
         pr, tr, tmr = False, False, False
-        time, ports, targets = str(), str(), str()
+        timer, ports, targets = str(), str(), str()
         while not tr:  # Keep repeating the question until user inputs are valid
             targets = input('[+] Enter Target/s To Scan(split multiple targets with): ').strip(' ')
 
@@ -58,8 +58,8 @@ def portScannerf():
                     print('invalid port number\n\nTry Again')
 
         while not tmr:
-            time = input('[+] Enter timeout time in seconds i.e 5 = fives seconds ').strip(' ')
-            if time.isdigit():
+            timer = input('[+] Enter timeout time in seconds i.e 5 = fives seconds ').strip(' ')
+            if timer.isdigit():
                 tmr = True
             else:
                 print('invalid time \nTry Again')
@@ -85,40 +85,40 @@ def portScannerf():
             print('There are multiple targets: "," detected')
             for ip_add in targets.split(','):
                 if value != 1:
-                    portScanner.scanRange(ip_add, portsArray[0], portsArray[1], time)
+                    portScanner.scanRange(ip_add, portsArray[0], portsArray[1], timer)
                 else:
-                    portScanner.scan1(ip_add, portsArray, time)
+                    portScanner.scan1(ip_add, portsArray, timer)
 
         else:
             print('There is a single target: no "," detected')
             if value != 1:
                 print('Range')
-                portScanner.scanRange(targets.strip(' '), portsArray[0], portsArray[1], time)
+                portScanner.scanRange(targets.strip(' '), portsArray[0], portsArray[1], timer)
             else:
                 print('Single')
-                print(targets, portsArray, time)
-                portScanner.scan1(targets, portsArray, time)
+                print(targets, portsArray, timer)
+                portScanner.scan1(targets, portsArray, timer)
     except KeyboardInterrupt:
         print('\n\nbye.')
         exit(0)
 
 
 def vulScan():
+    print('_____VULNERABILITY SCANNER____')
     try:
         right_choice = [False, False, False, False]
         port_is_range = bool()
-        banner_array = []
-        port_array = []
+        port_array, banner_array = [], []
+
         while not right_choice[0]:
             targets = str(input('\n[+] Enter Target/s To Scan(split multiple targets with ,): ')).strip(' ')
+            right_choice[0] = True
             for ip_add in targets.split(','):
-                if vul.check_ip(ip_add)[1] == False:
+                if not vul.check_ip(ip_add)[1]:
                     right_choice[0] = False
                     print(colored(ip_add, on_color='on_red', attrs=['underline']) + colored(' not an ipaddress',
                                                                                             color='red'))
                     break
-                else:
-                    right_choice[0] = True
 
         while not right_choice[1]:
             ports = input(
@@ -126,7 +126,7 @@ def vulScan():
             if '-' not in ports:  # if it not a range i.e specific port(s)
                 port_is_range = False
                 for port in ports.split(','):
-                    if port.isdigit():  # check if each port theyve entered is an whole number
+                    if port.isdigit():  # check if each port they've entered is an whole number
                         port_array.append(int(port))  # add it it to the array
                         right_choice[1] = True
                     else:  # if a input isn't a number, ask the the question again
@@ -149,8 +149,8 @@ def vulScan():
 
         port_array.sort()  # makes sure the range is in order in case they input higher port first
         while not right_choice[2]:
-            time = input('\n[+] Enter timeout time in seconds ').strip(' ')
-            if time.isdigit():
+            timer = input('\n[+] Enter timeout time in seconds ').strip(' ')
+            if timer.isdigit():
                 right_choice[2] = True
             else:
                 right_choice[2] = False
@@ -164,7 +164,8 @@ def vulScan():
 
         for ip_add in targets.split(','):
             if port_is_range:
-                banner_port = vul.scan(ip_add, port_array[0], port_array[1], int(time))  # a list of banners their ports
+                banner_port = vul.scan(ip_add, port_array[0], port_array[1], int(timer))  # a list of banners their
+                # ports
 
                 if len(banner_port) == 0:
                     print("No banners found")
@@ -173,7 +174,7 @@ def vulScan():
                         banner_array.append(banner_port[x][0].lower())
                         port_array.append(banner_port[x][1])
             else:
-                banner_port = vul.scan1(ip_add, port_array, int(time))
+                banner_port = vul.scan1(ip_add, port_array, int(timer))
                 if len(banner_port) == 0:
                     print("No banners found")
                 else:
@@ -209,7 +210,7 @@ def vulScan():
 
 def sshBruteForcer():
     try:
-        print('_____SSH BRUTEFORCER____')
+        print('_____SSH BRUTEFORCER____\n')
         host = input('[+] Target Address: ')
         username = input('[+] SSH Username: ')
         input_file = input('[+] Passwords File: ')
@@ -243,6 +244,7 @@ def sshBruteForcer():
 
 def passwordCracker():
     try:
+        print('_____PASSWORD CRACKER____\n')
         hash_to_decrypt = str(input(colored('[+] Enter hash to decrypt or hashes using ",": ', color='grey')))
         fr, thr = False, False
 
@@ -278,6 +280,7 @@ def passwordCracker():
 
 
 def arpSpoofer():
+    print('_____ARP SPOOFER____\n')
     try:
         tip, rip = False, False
         target_ip, router_ip = str(), str()
@@ -286,14 +289,14 @@ def arpSpoofer():
             target_ip = input('[+] Enter Target ip): ').strip(' ')
             if ',' in target_ip:
                 for ip_add in target_ip.split(','):
-                    if portScanner.check_ip(ip_add) == ip_add:  # check if its a valid ip
+                    if portScanner.check_ip(ip_add)[0] == ip_add:  # check if its a valid ip
                         tip = True
                     else:  # if not print ask the question again, by breaking the loop
                         print(ip_add + 'not an ip address')
                         tip = False
                         break
             if ',' not in target_ip:
-                if portScanner.check_ip(target_ip) == target_ip:  # check if its a valid ip
+                if portScanner.check_ip(target_ip)[0] == target_ip:  # check if its a valid ip
                     tip = True
                 else:  # if not print the error and ask the question again, by breaking the loop
                     print(target_ip + 'not an ip address')
@@ -304,7 +307,7 @@ def arpSpoofer():
         print(list_of_target_ips)
         while not rip:  # if theres a error in the target ip
             router_ip = input('[+] Enter Router ip): ').strip(' ')
-            if portScanner.check_ip(router_ip) == router_ip:  # check if its a valid ip
+            if portScanner.check_ip(router_ip)[0] == router_ip:  # check if its a valid ip
                 rip = True
             else:  # if not print the error and ask the question again, by breaking the loop
                 print(router_ip + 'not an ip address')
@@ -343,11 +346,11 @@ def arpSpoofer():
 
 
 def passwordSniffer():
-    print(colored('_____PASSWORD SNIFFER____', 'on_yellow'))
+    print(colored('_____PASSWORD SNIFFER____', on_color='on_yellow'))
     print("\n")
     ir = True
     while ir:
-        interface = input("interface i.e en0 or ethernet: ")  # make its user input
+        interface = input("Enter Interface i.e en0 or ethernet: ")  # make its user input
         try:
             print()
             sniff(iface=interface, prn=pkt_parser, store=0)
@@ -370,33 +373,46 @@ if __name__ == '__main__':
             print('\n')
             print(colored("Welcome to PENE TEST", color="grey", on_color="on_cyan", attrs=['bold', 'underline']))
             print('\n')
-            opr = False
-            while not opr:  # if input is invalid keep asking the question
-                print(colored('[1] PortScanner  ', on_color='on_green') +
-                      colored("[2] Vulnerability Scanner", on_color='on_cyan') +
-                      colored("[3] SSH Bruteforce  ", on_color='on_magenta')
-                      )
-                print('-' * 65)
-                print(colored("[4] ARPSpoofer   ", on_color='on_blue') +
-                      colored("[5] Password Sniffer     ", on_color='on_red', attrs=['dark']) +
-                      colored("[6] Password Cracker", on_color='on_grey')
-                      )
-                option = input(colored("\nChoose a number: ", attrs=["bold"])).strip(' ')
+            intro = True
+            while intro:
+                opr = False
+                while not opr:  # if input is invalid keep asking the question
+                    print(colored('[1] PortScanner  ', on_color='on_green') +
+                          colored("[2] Vulnerability Scanner", on_color='on_cyan') +
+                          colored("[3] SSH Bruteforce  ", on_color='on_magenta')
+                          )
+                    print('-' * 6)
+                    print(colored("[4] ARPSpoofer   ", on_color='on_blue') +
+                          colored("[5] Password Sniffer     ", on_color='on_red', attrs=['dark']) +
+                          colored("[6] Password Cracker", on_color='on_grey')
+                          )
+                    option = input(colored("\nChoose a number: ", attrs=["bold"])).strip(' ')
 
-                if option == '1':
-                    portScannerf()
-                elif option == '2':
-                    vulScan()
-                elif option == '3':
-                    sshBruteForcer()
-                elif option == '4':
-                    arpSpoofer()
-                elif option == '5':
-                    passwordSniffer()
-                elif option == '6':
-                    passwordCracker()
-                else:
-                    print(colored('0_o Input not recognised\n', color='red', attrs=['bold']))
+                    if option == '1':
+                        opr = True
+                        portScannerf()
+                    elif option == '2':
+                        opr = True
+                        vulScan()
+                    elif option == '3':
+                        opr = True
+                        sshBruteForcer()
+                    elif option == '4':
+                        opr = True
+                        arpSpoofer()
+                    elif option == '5':
+                        opr = True
+                        passwordSniffer()
+                    elif option == '6':
+                        opr = True
+                        passwordCracker()
+                    else:
+                        print(colored('0_o Input not recognised\n', color='red', attrs=['bold']))
+
+                if 'y' in input('Would you like to exit? y/n').lower():
+                    intro = False
+                    print('bye.')
+
         except KeyboardInterrupt:
             print('\nBye.')
     else:
