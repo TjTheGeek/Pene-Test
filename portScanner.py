@@ -35,7 +35,7 @@ def check_ip(ip):
         try:  # convert the ip
             return socket.gethostbyname(ip), True
         except socket.gaierror:  # incorrect input
-            return print('Input error\nTry Again'), False
+            return print('Input error Try Again'), False
 
 
 def get_banner(s):

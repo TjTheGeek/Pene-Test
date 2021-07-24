@@ -1,20 +1,21 @@
 import socket
 from os import path
-
-from IPy import IP
 from termcolor import colored
 
-resultsOfScan = []
+from portScanner import check_ip, get_banner
 
 
-def noneType(list):  # removes every appearance of none
-    noneType = True
-    while noneType:
-        if None in list:
-            list.remove(None)
+def noneType(listOfElements):  # removes every appearance of none
+    noneElement = True
+    while noneElement:
+        if None in listOfElements:
+            listOfElements.remove(None)
         else:
-            noneType = False
-    return list
+            noneElement = False
+    return listOfElements
+
+
+resultsOfScan = []
 
 
 def scan1(target, portsArray, time):
@@ -43,24 +44,7 @@ def scan(target, rangeLB=79, rangeUP=84, time=2):
     return noneType(resultsOfScan)
 
 
-# check if the domain or ipaddress is formatted correctly
-def check_ip(ip):
-    try:
-        IP(ip)
-        return ip, True
-    except ValueError:
-        try:  # convert the ip
-            return socket.gethostbyname(ip), True
-        except socket.gaierror:  # incorrect input
-            return print('Input error'), False
-
-
-def get_banner(s):
-    return s.recv(1024)
-
-
-banners = []
-open_ports = []
+open_ports, banners = [], []
 
 
 def scan_port(ipaddress, port, timeout):
@@ -128,8 +112,8 @@ if __name__ == "__main__":
         # in case they input higher port first
         port_array.sort()
         while not right_choice[2]:
-            time = input('\n[+] Enter timeout time in seconds ').strip(' ')
-            if time.isdigit():
+            timer = input('\n[+] Enter timeout time in seconds ').strip(' ')
+            if timer.isdigit():
                 right_choice[2] = True
             else:
                 right_choice[2] = False
@@ -143,21 +127,21 @@ if __name__ == "__main__":
 
         for ip_add in targets.split(','):
             if port_is_range:
-                banner_port = scan(ip_add, port_array[0], port_array[1], int(time))
+                banner_port = scan(ip_add, port_array[0], port_array[1], int(timer))
                 if None in banner_port:
                     pass
                 else:
                     banner_array.append(banner_port[0].lower())
                     port_array.append(banner_port[1])
             else:
-                banner_port = scan1(ip_add, port_array, int(time))
+                banner_port = scan1(ip_add, port_array, int(timer))
                 if None in banner_port:
                     pass
                 else:
                     banner_array.append(banner_port[0])
                     port_array.append(banner_port[1])
 
-        if len(banner_array) != 0:
+        if len(banner_array) > 0:
             with open(vul_File, 'r') as file:
                 once = count = 0
                 for line in file.readlines():
