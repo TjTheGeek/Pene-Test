@@ -65,7 +65,7 @@ def portScannerf():
                 print('invalid time \nTry Again')
                 tmr = False
 
-        value = 0
+        portIsARange = bool()
         portsArray = list()
         # if a range
         if '-' in ports:
@@ -73,25 +73,25 @@ def portScannerf():
                 portsArray.append(int(port))
                 # makes sure the range is in order
                 portsArray.sort()
+            portIsARange = True
+
         else:
             for port in ports.split(','):
                 print(port)
                 portsArray.append(int(port.strip(' ')))
-            value = 1
-
-        print("The value is: " + str(value))
+            portIsARange = False
 
         if ',' in targets:
             print('There are multiple targets: "," detected')
             for ip_add in targets.split(','):
-                if value != 1:
+                if portIsARange:
                     portScanner.scanRange(ip_add, portsArray[0], portsArray[1], timer)
                 else:
                     portScanner.scan1(ip_add, portsArray, timer)
 
         else:
             print('There is a single target: no "," detected')
-            if value != 1:
+            if portIsARange:
                 print('Range')
                 portScanner.scanRange(targets.strip(' '), portsArray[0], portsArray[1], timer)
             else:
