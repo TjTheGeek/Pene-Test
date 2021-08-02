@@ -1,35 +1,33 @@
 import hashlib
 from os import path
-
 from termcolor import colored
 
 
 def crack(type_of_hash, file_path, hash_to_decrypt):
     print(colored(text="Currently cracking " + hash_to_decrypt + " with " + type_of_hash, color='green'))
     with open(file_path, 'r') as file:
+        found = False
         for line in file.readlines():
             if type_of_hash.lower() == 'md5':
                 hash_object = hashlib.md5(line.strip().encode())
                 hashed_word = hash_object.hexdigest()
                 if hashed_word == hash_to_decrypt.lower():
-                    print(colored('Found MD5 Password: ' + line.strip(), 'green'))
-                    exit(0)
+                    return print(colored('Found MD5 Password: ' + line.strip(), 'green')), True
 
             if type_of_hash == 'sha1':
                 hash_object = hashlib.sha1(line.strip().encode())
                 hashed_word = hash_object.hexdigest()
                 if hashed_word == hash_to_decrypt.lower():
-                    print(colored('Found Sha1 Password: ' + line.strip(), 'green'))
-                    exit(0)
+                    return print(colored('Found Sha1 Password: ' + line.strip(), 'green')), True
 
             if type_of_hash == 'sha256':
                 hash_object = hashlib.sha256(line.strip().encode())
                 hashed_word = hash_object.hexdigest()
                 if hashed_word == hash_to_decrypt.lower():
-                    print(colored('Found Sha-256 Password: ' + line.strip(), 'green'))
-                    exit(0)
+                    return print(colored('Found Sha-256 Password: ' + line.strip(), 'green')), True
 
-        print(colored('Password Not In File.', 'red'))
+        if not found:
+            return print(colored('Password Not In File.', 'red')), False
 
 
 if __name__ == "__main__":
@@ -38,7 +36,7 @@ if __name__ == "__main__":
         fr, thr = False, False
 
         while not thr:
-            type_of_hash = str(input('Choose a Hash to decrypt:\n [1] SHA-1  [2]MD-5 ')).strip(' ')
+            type_of_hash = str(input('Choose a Hash to decrypt:\n [1] SHA-1  [2]MD-5  [3]SHA-256')).strip(' ')
             if type_of_hash == "1" or type_of_hash == "2" or type_of_hash == "3":
                 thr = True
                 if type_of_hash == "1":

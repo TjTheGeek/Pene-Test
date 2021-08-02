@@ -1,75 +1,81 @@
 import socket
-
 from IPy import IP
+from termcolor import colored
 
 
+# Scans one target at specific port/s i.e. ports 1,7,20,80,100
 def scan1(target, portArray, timeout):
     try:
-        converted_ip = check_ip(target)[0]
+        converted_ip = checkIP(target)[0]
+        print('\n' + '[-_0 Scanning Target]' + str(target))
+        for portNumber in portArray:
+            scanPort(converted_ip, portNumber, timeout)
     except:
         pass
-    else:
-        print('\n' + '[-_0 Scanning Target] 1' + str(target))
-        for portnum in portArray:
-            scan_port(converted_ip, portnum, timeout)
 
 
+# Scans one target between a range of port i.e. ports 1-5
 def scanRange(target, rangeLB, rangeUP, timeout):
     try:
-
-        converted_ip = check_ip(target)[0]
+        convertedIp = checkIP(target)[0]
         print('\n' + '[-_0 Scanning Target] ' + str(target))
-        for port in range(rangeLB, rangeUP + 1):
-            scan_port(converted_ip, port, timeout)
+        for port in range(rangeLB, rangeUP + 1):  # range Lower Bound(LB) and Upper Bound(UP)
+            scanPort(convertedIp, port, timeout)
     except:
         pass
 
 
-# check if its an ip
-# converts domain to an Ip address
-def check_ip(ip):
+# checks if IP addresses are valid, and converts domains to IP addresses
+def checkIP(ip):
     try:
-        IP(ip)
+        IP(ip)  # THe IP() function returns the same IP that was inputted, if its an IP address.
         return ip, True
-    except ValueError:
-        try:  # convert the ip
+    except ValueError:  # If an incorrect type is received i.e. a domain which is a domain.
+        try:  # convert the domain to an ip
             return socket.gethostbyname(ip), True
-        except socket.gaierror:  # incorrect input
+        except socket.gaierror:  # not a domain
             return print('Input error Try Again'), False
 
 
-def get_banner(s):
+# retrieves the banner from target machine when connection is made
+def getBanner(s):
     return s.recv(1024)
 
 
-def scan_port(ipaddress, port, timeout):
+# main scan function: Makes a connection, and attempts to get the banner
+def scanPort(ip_address, port, timeout):
     try:  # try connect
         sock = socket.socket()
         sock.settimeout(int(timeout))
-        sock.connect((ipaddress, port))
+        sock.connect((ip_address, port))
+    except:  # if theses an error connecting do nothing
+        return print(colored('[-] Port Closed :', 'red') + str(port)), False
+    else:
         try:
-            banner = get_banner(sock)
-            print('[+] Open Port ' + str(port) + ' : ' + str(banner.decode().strip('\n')))
+            banner = getBanner(sock)
+            return print(
+                colored('[+] Open Port ', 'green') + str(port) + ' : ' + colored(str(banner.decode().strip('\n')),
+                                                                                 'yellow')), True, True
         except:  # if not just say the port is open
-            print('[+] Open Port ' + str(port))
-        finally:  # then close the connection
-            sock.close()
-    except:  # if theses an error connecting do nothing, go to the next
-        pass
+            return print(colored('[+] Open Port ', 'green') + str(port)), True, False
+    finally:  # then close the connection
+        sock.close()
 
 
 if __name__ == "__main__":
     try:
+        print('_____PORTSCANNER____')
         pr, tr, tmr = False, False, False
-        time, ports, targets = str(), str(), str()
+        timer, ports, targets, portsArray = str(), str(), str(), list()
+
         while not tr:  # Keep repeating the question until user inputs are valid
             targets = input('[+] Enter Target/s To Scan(split multiple targets with): ').strip(' ')
 
-            for ip_add in targets.split(','):  # for every ip address in the inputted targets target
-                if check_ip(ip_add.strip(' '))[1]:  # check if its a valid ip
+            for ipAddress in targets.split(','):  # for every ip address in the inputted targets target
+                if checkIP(ipAddress)[1]:  # check if its a valid ip
                     tr = True
                 else:  # if not print the error and ask the question again, by breaking the loop
-                    print(ip_add + ' not an ip address')
+                    print(ipAddress + ' not an ip address')
                     tr = False
                     break
 
@@ -82,7 +88,7 @@ if __name__ == "__main__":
                         pr = True
                     else:
                         pr = False
-                        print('invalid port number\nTry Again')
+                        print('invalid port number specified:' + port + '\nTry Again')
                         break  # ends the iteration once an error is found
             elif '-' in ports:
                 for port in ports.split('-'):
@@ -90,56 +96,39 @@ if __name__ == "__main__":
                         pr = True
                     else:
                         pr = False
-                        print('invalid port number specified\nTry Again')
-                        break  # break from teh for loop
+                        print('invalid port number specified:' + port + '\nTry Again')
+                        break  # break from the for loop
             else:
                 if ports.isdigit():
                     pr = True
                 else:
                     pr = False
-                    print('invalid port number\n\nTry Again')
+                    print('invalid port number\nTry Again')
 
         while not tmr:
-            time = input('[+] Enter timeout time in seconds i.e 5 = fives seconds ').strip(' ')
-            if time.isdigit():
+            timer = input('[+] Enter timeout time in seconds i.e 5 = fives seconds ').strip(' ')
+            if timer.isdigit():
                 tmr = True
             else:
-                print('invalid time \nTry Again')
+                print('invalid time number specified:' + port + '\nTry Again')
                 tmr = False
 
-        value = 0
-        portsArray = list()
-        # if a range
-        if '-' in ports:
+        if '-' in ports:  # if a range of port
             for port in ports.split('-'):
                 portsArray.append(int(port))
-                # makes sure the range is in order
+                # makes sure the range is in order from lowest to highest
                 portsArray.sort()
+
+            for ipAddress in targets.split(','):
+                scanRange(ipAddress, portsArray[0], portsArray[1], timer)
         else:
             for port in ports.split(','):
                 print(port)
                 portsArray.append(int(port.strip(' ')))
-            value = 1
 
-        print("The value is: " + str(value))
+            for ipAddress in targets.split(','):
+                scan1(ipAddress, portsArray, timer)
 
-        if ',' in targets:
-            print('There are multiple targets: "," detected')
-            for ip_add in targets.split(','):
-                if value != 1:
-                    scanRange(ip_add, portsArray[0], portsArray[1], time)
-                else:
-                    scan1(ip_add, portsArray, time)
-
-        else:
-            print('There is a single target: no "," detected')
-            if value != 1:
-                print('Range')
-                scanRange(targets.strip(' '), portsArray[0], portsArray[1], time)
-            else:
-                print('Single')
-                print(targets, portsArray, time)
-                scan1(targets, portsArray, time)
     except KeyboardInterrupt:
         print('\n\nbye.')
         exit(0)
