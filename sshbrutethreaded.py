@@ -22,7 +22,8 @@ def sshConnection(host, port, username, password):
         return print(
             colored('[+] Found Password: ', 'green') +
             colored(password, 'yellow') +
-            colored((', For Account: ' + username), 'yellow')), True
+            colored(' For Account: ', 'green') + colored(username, 'yellow')
+        ), True
     finally:
         ssh.close()
 
@@ -33,9 +34,9 @@ if __name__ == '__main__':
         while not the_right_input[0]:  # Keep repeating the question until user inputs are valid
             host_ip = input('[+] Target IP Address: ').strip(' ')
             # for every ip address in the inputted targets target
-            if checkIP(host_ip)[0] == host_ip or host_ip.lower() == 'localhost':
+            if checkIP(host_ip)[1]:
                 # check if its a valid ip
-                ans = input("Is " + host_ip + " correct?")
+                ans = input("Is " + host_ip + " correct? ")
                 if 'y' in ans:
                     the_right_input[1] = True
                 else:

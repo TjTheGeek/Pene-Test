@@ -7,7 +7,7 @@ from termcolor import colored
 def scan1(target, portArray, timeout):
     try:
         converted_ip = checkIP(target)[0]
-        print('\n' + '[-_0 Scanning Target]' + str(target))
+        print('\n' + '[-_0] Scanning Target: ' + str(target))
         for portNumber in portArray:
             scanPort(converted_ip, portNumber, timeout)
     except:
@@ -18,7 +18,7 @@ def scan1(target, portArray, timeout):
 def scanRange(target, rangeLB, rangeUP, timeout):
     try:
         convertedIp = checkIP(target)[0]
-        print('\n' + '[-_0 Scanning Target] ' + str(target))
+        print('\n' + '[-_0] Scanning Target: ' + str(target))
         for port in range(rangeLB, rangeUP + 1):  # range Lower Bound(LB) and Upper Bound(UP)
             scanPort(convertedIp, port, timeout)
     except:
@@ -49,7 +49,7 @@ def scanPort(ip_address, port, timeout):
         sock.settimeout(int(timeout))
         sock.connect((ip_address, port))
     except:  # if theses an error connecting do nothing
-        return print(colored('[-] Port Closed :', 'red') + str(port)), False
+        return print(colored('[-] Port Closed :', 'red') + str(port)), False, False
     else:
         try:
             banner = getBanner(sock)

@@ -21,7 +21,7 @@ open_ports, banners, resultsOfScan = [], [], []
 def scan1(target, portsArray, time):
     try:
         converted_ip = checkIP(target)[0]
-        print('\n' + '[-_0 Scanning Target] ' + str(target))
+        print('\n', '[-_0] Scanning Target: ' + str(target))
         for port in portsArray:
             resultsOfScan.append(scanPort(converted_ip, port, time))
     except:
@@ -34,7 +34,7 @@ def scan1(target, portsArray, time):
 def scanRange(target, rangeLB, rangeUP, time):
     try:
         converted_ip = checkIP(target)[0]
-        print('\n' + '[-_0 Scanning Target] ' + str(target) + "2")
+        print('\n', '[-_0] Scanning Target ' + str(target))
         for port in range(rangeLB, rangeUP):
             resultsOfScan.append(scanPort(converted_ip, port, time))
     except:
@@ -136,7 +136,6 @@ if __name__ == "__main__":
                 for x in range(len(bannerAndPort)):
                     bannerArray.append(bannerAndPort[x][0])
                     portArray.append(bannerAndPort[x][1])
-
 
                 with open(vul_File, 'r') as file:
                     for line in file.readlines():

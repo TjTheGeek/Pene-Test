@@ -1,5 +1,4 @@
 import os
-import threading
 import time
 from os import path
 from termcolor import colored
@@ -7,13 +6,13 @@ from portScanner import checkIP, scan1, scanRange
 import portScanner_vulscan as vul
 import sshbrutethreaded as ssh
 from PasswordCracker import crack
-from arpspoofer2 import getMacAddress, spoof
+import arpspoofer2
 import scapy
 from passSniffer import sniff, pkt_parser
 
 
 def portScannerf():
-    print(colored('PortScanner  ', on_color='on_green'))
+    print('\n', colored('PortScanner  ', on_color='on_green'))
 
     try:
         pr, tr, tmr = False, False, False
@@ -27,7 +26,7 @@ def portScannerf():
                     if checkIP(ipAddress)[0]:  # check if its a valid ip
                         tr = True
                     else:  # if not print the error and ask the question again, by breaking the loop
-                        print(colored('[0_o] ' + ipAddress + ' not an ip address', 'on_red'))
+                        print(colored('[0_o] ' + ipAddress + ' not an ip address', 'red'))
                         tr = False
                         break
 
@@ -93,7 +92,8 @@ def vulScan():
             for ip_add in targets.split(','):
                 if not checkIP(ip_add)[1]:
                     right_choice[0] = False
-                    print(colored(ip_add, on_color='on_red', attrs=['underline']) + colored(' not an ipaddress',
+                    print(colored('[x] ', 'red'),
+                          colored(ip_add, on_color='on_red', attrs=['underline']) + colored(' not an ipaddress',
                                                                                             color='red'))
                     break
 
@@ -138,7 +138,7 @@ def vulScan():
             if path.isfile(vul_File):
                 right_choice[3] = True
             else:
-                print(colored('File Not Found !\n', color='red'))
+                print(colored('[x] File Not Found !\n', color='red'))
 
         for ip_add in targets.split(','):
             if portIsRange:
@@ -148,11 +148,11 @@ def vulScan():
                 bannerAndPort = vul.scan1(ip_add, portArray, int(timer))
 
             if len(bannerAndPort) > 0:
-                bannerArray = []
-                portArray.clear()  # reusing the array
+                bannerArray, port2Array = [], []
+                # reusing the array
                 for x in range(len(bannerAndPort)):
                     bannerArray.append(bannerAndPort[x][0])
-                    portArray.append(bannerAndPort[x][1])
+                    port2Array.append(bannerAndPort[x][1])
 
                 with open(vul_File, 'r') as file:
                     for line in file.readlines():
@@ -163,9 +163,11 @@ def vulScan():
                                 colored(' ON PORT: ', 'blue') +
                                 # Gets the index of the banner in the banner array, which is the same same as the
                                 # index of the port array
-                                colored(str(portArray[bannerArray.index(line.strip())]), color='cyan',
-                                        attrs=['bold', 'underline', 'reverse'])
+                                colored(str(port2Array[bannerArray.index(line.strip().lower())]), color='cyan',
+                                        attrs=['bold', 'underline', 'reverse']), '\n'
                             )
+                        else:
+                            pass
 
                 view_all = input(colored('Would you like it see all banners found ?', 'yellow'))
                 if 'y' in view_all.lower():
@@ -173,9 +175,10 @@ def vulScan():
                         print(colored('\nBanner: ', 'green') +
                               colored(bannerArray[x], 'yellow', attrs=['underline', 'bold']) +
                               colored('  on Port: ', color='green') +
-                              colored(portArray[x], 'yellow', attrs=['underline', 'bold']))
-                else:
-                    pass
+                              colored(port2Array[x], 'yellow', attrs=['underline', 'bold']))
+
+                bannerArray.clear()
+                port2Array.clear()
             else:
                 print(colored('No Banners Found', 'red'))
                 continue
@@ -186,46 +189,73 @@ def vulScan():
 
 def sshBruteForcer():
     try:
-        print('_____SSH BRUTEFORCER____\n')
-        host = input('[+] Target Address: ')
-        username = input('[+] SSH Username: ')
-        input_file = input('[+] Passwords File: ')
-        print('\n')
+        the_right_targetInput, the_right_username, the_right_file, port_input = False, False, False, False
+        while not the_right_targetInput:  # Keep repeating the question until user inputs are valid
+            host_ip = input('[+] Target IP Address: ').strip()
+            # for every ip address in the inputted targets target
+            if checkIP(host_ip)[1]:
+                # check if its a valid ip
+                ans = input(colored("[?] Confirm Target: ", 'yellow') + host_ip)
+                if 'y' in ans:
+                    the_right_targetInput = True
+                else:
+                    pass
+            else:  # if not print the error and ask the question again
+                print(colored('[x] Input not valid ' + host_ip, 'red'))
 
-        def file(password_file):
-            f = None
-            try:  # check if the file exist
-                f = open(password_file, 'r')
-            except IOError:
-                print("File not accessible")
-            else:  # if the file exists
-                print('* * * Starting Threaded SSH Bruteforce On ' + host + ' With Account: ' + username + '* * *')
-                with f as passwords:
-                    for line in passwords.readlines():
-                        if ssh.stop_flag == 1:
-                            t.join()
-                            exit()
-                        password = line.strip()
-                        t = threading.Thread(target=ssh.sshConnection, args=(host, username, password,))
-                        t.start()
-                        time.sleep(0.5)
-            finally:
-                f.close()
+        while not the_right_username:
+            username = str(input(colored('[+] Enter SSH Username: ', 'green')))
+            if len(username) > 0:
+                ans = input(colored("[?] Is " + username + " correct?", 'yellow'))
+                if 'y' in ans:
+                    the_right_username = True
+                else:
+                    pass
 
-        file(input_file)
+        while not the_right_file:
+            input_file = str(input('[+] Password File: '))
+            if not path.isfile(input_file):
+                print(colored('[x] File not found Try again', 'red'))
+            else:
+                the_right_file = True
+
+        while not port_input:
+            port = str(input(colored('[+] Input SSH Port NOTE: default is 22: ', 'green')).strip(' '))
+            if port.isdigit():
+                port_input = True
+            else:
+                print(colored('[x] Invalid Entry', on_color='on_red'))
+
+        print(
+            colored('* * * Starting SSH Bruteforce on ', 'green') + host_ip +
+            colored(' With Account: ', 'green') + username + colored(' * * *', 'green')
+        )
+
+        with open(input_file, 'r') as file:
+            for line in file.readlines():
+                if ssh.stop_flag == 1:
+                    t.join()
+                    break
+                password = line.strip()
+                print(password)
+                t = ssh.Thread(target=ssh.sshConnection, args=(host_ip, port, username, password,))
+                t.start()
+                ssh.sleep(0.5)
+
+            if ssh.stop_flag == 0:
+                print(colored('Password not found', 'red'))
     except KeyboardInterrupt:
-        print('bye.')
-        exit(0)
+        pass
 
 
 def passwordCracker():
     try:
-        print('_____PASSWORD CRACKER____\n')
+        print(colored('_____PASSWORD CRACKER____', on_color='on_grey'), '\n')
         hash_to_decrypt = str(input(colored('[+] Enter hash to decrypt or hashes using ",": ', color='grey')))
         fr, thr = False, False
 
         while not thr:
-            print(colored('[+] Choose a Hash to decrypt:', color='grey', attrs=list['bold']))
+            print(colored('[+] Choose a Hash to decrypt:', color='green'))
             type_of_hash = str(
                 input(colored('[1] SHA-1  ', on_color='on_green') + colored('[2]MD-5  ', on_color='on_blue')
                       + colored('[3]SHA-256  ', on_color='on_cyan'))
@@ -242,77 +272,76 @@ def passwordCracker():
                 pass
 
         while not fr:  # if file is not right
-            file_path = str(input(colored('[+] Enter path to the password file: ', color='grey')))
+            file_path = str(input(colored('[+] Enter path to the password file: ', color='green')))
             if not path.isfile(file_path):
-                print(colored('File not found\n', 'red') + colored('Try again', color='red', attrs=['bold']))
+                print(colored('File not found\n', on_color='on_red'))
             else:
                 fr = True
 
     except:
-        print(colored("0_o Error", 'red', attrs=['bold']))
+        print(colored("[0_o] Error", 'red', attrs=['bold']))
     else:
         for each_hash in hash_to_decrypt.split(','):
             crack(type_of_hash, file_path, each_hash)
 
 
 def arpSpoofer():
-    print('_____ARP SPOOFER____\n')
+    print('\n', colored('_____ARP SPOOFER____', on_color='on_blue'))
     try:
         tip, rip = False, False
         target_ip, router_ip = str(), str()
         list_of_target_ips = list()
         while not tip:  # if theres a error in the target ip
-            target_ip = input('[+] Enter Target ip): ').strip(' ')
+            target_ip = input(colored('[+] Enter Target ip): ', 'green')).strip(' ')
             if ',' in target_ip:
                 for ip_add in target_ip.split(','):
                     if checkIP(ip_add)[0] == ip_add:  # check if its a valid ip
                         tip = True
                     else:  # if not print ask the question again, by breaking the loop
-                        print(ip_add + 'not an ip address')
+                        print(colored('[x] ' + ip_add + ' not an ip address', on_color='on_red'))
                         tip = False
                         break
             if ',' not in target_ip:
                 if checkIP(target_ip)[0] == target_ip:  # check if its a valid ip
                     tip = True
                 else:  # if not print the error and ask the question again, by breaking the loop
-                    print(target_ip + 'not an ip address')
+                    print(colored('[x] ' + target_ip + ' not an ip address', on_color='on_red'))
                     tip = False
 
         for ips in target_ip.split(','):  # places targets in this array
             list_of_target_ips.append(ips)
         print(list_of_target_ips)
         while not rip:  # if theres a error in the target ip
-            router_ip = input('[+] Enter Router ip): ').strip(' ')
+            router_ip = input(colored('[+] Enter Router ip): ', 'green')).strip(' ')
             if checkIP(router_ip)[0] == router_ip:  # check if its a valid ip
                 rip = True
             else:  # if not print the error and ask the question again, by breaking the loop
-                print(router_ip + 'not an ip address')
-                print('try again\n')
+                print(colored('[x] ' + router_ip + ' not an ip address', on_color='on_red'))
                 rip = False
     except KeyboardInterrupt:
         print('\nClosing ARP Spoofer.')
-        exit(0)
+
     else:
         try:
             list_of_target_macs = list()
             for ip in list_of_target_ips:
-                list_of_target_macs.append(str(getMacAddress(ip)))
+                list_of_target_macs.append(str(arpspoofer2.getMacAddress(ip)))
 
-            router_mac = str(getMacAddress(router_ip))
+            router_mac = str(arpspoofer2.getMacAddress(router_ip))
             print(router_mac)
             print(list_of_target_macs)
         except IndexError:
-            print("Mac Address of " + ip + " not found")
+            print(colored("[x] Mac Address of " + ip + " not found", on_color='on_red'))
         except KeyboardInterrupt:
             print('bye')
         except:
-            print('error connecting')
+            print(colored('[0_o] Error connecting', 'red', attrs=['bold']))
         else:
             try:
                 while True:
                     for x in range(len(list_of_target_macs)):
                         print(x)
-                        spoof(router_ip, list_of_target_ips[x], router_mac, list_of_target_macs[x])
+                        arpspoofer2.spoof(router_ip, list_of_target_ips[x], router_mac, list_of_target_macs[x])
                         time.sleep(
                             round(2 / len(list_of_target_macs), 2))  # ensures each ip is spoofed every to seconds
 
@@ -328,11 +357,10 @@ def passwordSniffer():
     while ir:
         interface = input("Enter Interface i.e en0 or ethernet: ")  # make its user input
         try:
-            print()
+            print(colored('[0_-] Sniffer in Progress', 'yellow'))
             sniff(iface=interface, prn=pkt_parser, store=0)
         except KeyboardInterrupt:
-            print('Exiting')
-            exit(0)
+            pass
         except scapy.error.Scapy_Exception as e:
             if 'root' in str(e):
                 print(colored("WARNING ", "red", attrs=['bold']) + colored('Not running application as Sudo!!', 'red'))
@@ -383,9 +411,9 @@ if __name__ == '__main__':
                         opr = True
                         passwordCracker()
                     else:
-                        print(colored('[0_o] Input not recognised\n', color='red', attrs=['bold']))
+                        print(colored('[x] Input not recognised\n', color='red'))
 
-                if 'n' in input('\nWould you like to continue? y/n: ').lower():
+                if 'y' in input(colored('\n[?] Would you like to exit? y/n: ', 'yellow')).lower():
                     intro = False
                     print('bye.')
 
